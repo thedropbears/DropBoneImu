@@ -8,6 +8,9 @@
 #define MPU6050_ADDR 0x68
 #define MPU6050_WHO_AM_I 0x75
 
+#include "inv_mpu.h"
+
+
 
 /* The following functions must be defined for this platform:
  * i2c_write(unsigned char slave_addr, unsigned char reg_addr,
@@ -23,6 +26,8 @@
  */
 
 #define log_i printf
+
+int main(int argc, char **argv);
 
 static int fd; // file descriptor for the I2C bus
 
