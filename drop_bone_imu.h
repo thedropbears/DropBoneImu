@@ -36,6 +36,8 @@ int i2c_write(unsigned char slave_addr, unsigned char reg_addr,
 int i2c_read(unsigned char slave_addr, unsigned char reg_addr,
     unsigned char length, unsigned char *data);
 
+void OpenBus();
+
 void delay_ms(unsigned long num_ms);
 void get_ms(unsigned long *count);
 void reg_int_cb(struct int_param_s *);
