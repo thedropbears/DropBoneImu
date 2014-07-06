@@ -4,7 +4,7 @@
 
 
 int main(int argc, char **argv){
-    
+    open_bus();
 }
 
 int i2c_write(unsigned char slave_addr, unsigned char reg_addr,
@@ -16,14 +16,14 @@ int i2c_read(unsigned char slave_addr, unsigned char reg_addr,
         
 }
 
-double open_bus() { 
+int open_bus() { 
     if ((fd = open(BBB_I2C_FILE)) < 0) {
         /* ERROR HANDLING: you can check errno to see what went wrong */
         perror("Failed to open the i2c bus");
         return 1;
     }
     if (ioctl(fd, BBB_I2C_FILE, MPU6050_ADDR) < 0) {
-        printf("Failed to acquire bus access and/or talk to slave.\n");
+        perror("Failed to acquire bus access and/or talk to slave.\n");
         /* ERROR HANDLING; you can check errno to see what went wrong */
         return 1;
     }	
