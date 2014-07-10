@@ -13,4 +13,5 @@ $(EXECUTABLE): $(OBJECTS)
 .cpp.o:
 	$(CC) $(CFLAGS) $< -o $@
 
-
+clean:
+	rm -rf *o dropboneimu
