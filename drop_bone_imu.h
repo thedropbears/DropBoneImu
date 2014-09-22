@@ -29,6 +29,8 @@
 
 int main(int argc, char **argv);
 
+int init();
+
 static int fd; // file descriptor for the I2C bus
 
 int i2c_write(unsigned char slave_addr, unsigned char reg_addr,

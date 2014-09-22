@@ -4,10 +4,15 @@
 #include <linux/i2c-dev.h>
 #include <unistd.h>
 #include <string.h>
+#include <fcntl.h>
 
 
 int main(int argc, char **argv){
-    open_bus();
+	init();
+}
+
+int init(){
+	open_bus();
     unsigned char whoami=0;
     i2c_read(MPU6050_ADDR, MPU6050_WHO_AM_I, 1, &whoami);
     printf("WHO_AM_I: %x\n", whoami);
@@ -36,7 +41,7 @@ int i2c_read(unsigned char slave_addr, unsigned char reg_addr,
 }
 
 int open_bus() { 
-    if ((fd = open(BBB_I2C_FILE)) < 0) {
+    if ((fd = open(BBB_I2C_FILE, O_RDWR)) < 0) {
         /* ERROR HANDLING: you can check errno to see what went wrong */
         perror("Failed to open the i2c bus");
         return 1;
@@ -59,7 +64,7 @@ void reg_int_cb(struct int_param_s *param){
 }
 
 inline int min ( int a, int b ){
-    
+    return a < b ? a : b;
 }
 inline void __no_operation(){
     
