@@ -8,8 +8,7 @@
 
 
 int main(int argc, char **argv){
-	struct int_param_s int_param;
-	printf("MPU init: %i\n", mpu_init(&int_param));
+
 	init();
 }
 
@@ -18,6 +17,8 @@ int init(){
     unsigned char whoami=0;
     i2c_read(MPU6050_ADDR, MPU6050_WHO_AM_I, 1, &whoami);
     printf("WHO_AM_I: %x\n", whoami);
+	struct int_param_s int_param;
+	printf("MPU init: %i\n", mpu_init(&int_param));
 }
 
 int i2c_write(unsigned char slave_addr, unsigned char reg_addr,
