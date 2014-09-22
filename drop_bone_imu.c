@@ -3,10 +3,14 @@
 #include <stdio.h>
 #include <linux/i2c-dev.h>
 #include <unistd.h>
+#include <string.h>
 
 
 int main(int argc, char **argv){
     open_bus();
+    unsigned char whoami=0;
+    i2c_read(MPU6050_ADDR, MPU6050_WHO_AM_I, 1, &whoami);
+    printf("WHO_AM_I: %x\n", whoami);
 }
 
 int i2c_write(unsigned char slave_addr, unsigned char reg_addr,
