@@ -1,6 +1,8 @@
 #include "drop_bone_imu.h"
 
 #include <stdio.h>
+#include <linux/i2c-dev.h>
+#include <unistd.h>
 
 
 int main(int argc, char **argv){
@@ -9,11 +11,24 @@ int main(int argc, char **argv){
 
 int i2c_write(unsigned char slave_addr, unsigned char reg_addr,
     unsigned char length, unsigned char const *data){
-        
+		unsigned char tmp[length+1];
+		tmp[0] = reg_addr;
+		memcpy(tmp+1, data, length);
+		if (write(fd, tmp, length+1) != length + 1){
+			return -1;
+		}
+		return 0; 
 }
 int i2c_read(unsigned char slave_addr, unsigned char reg_addr,
     unsigned char length, unsigned char *data){
-        
+        if (write(fd,&reg_addr, 1) != 1){
+			return -1;
+		}
+		if  (read(fd,data, length) != length){
+			return -2;
+		}
+		
+		return 0;
 }
 
 int open_bus() { 
@@ -22,7 +37,7 @@ int open_bus() {
         perror("Failed to open the i2c bus");
         return 1;
     }
-    if (ioctl(fd, BBB_I2C_FILE, MPU6050_ADDR) < 0) {
+    if (ioctl(fd, I2C_SLAVE, MPU6050_ADDR) < 0) {
         perror("Failed to acquire bus access and/or talk to slave.\n");
         /* ERROR HANDLING; you can check errno to see what went wrong */
         return 1;
