@@ -19,6 +19,15 @@ int init(){
     printf("WHO_AM_I: %x\n", whoami);
 	struct int_param_s int_param;
 	printf("MPU init: %i\n", mpu_init(&int_param));
+	printf("MPU sensor init: %i\n", mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL));
+	printf("MPU configure fifo: %i\n", mpu_configure_fifo(INV_XYZ_GYRO | INV_XYZ_ACCEL));
+	printf("DMP firmware: %i\n ",dmp_load_motion_driver_firmware());
+	unsigned short dmp_features = DMP_FEATURE_LP_QUAT | DMP_FEATURE_TAP | DMP_FEATURE_SEND_RAW_ACCEL | DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL;
+	printf("DMP feature enable: %i\n", dmp_enable_feature(dmp_features));
+	printf("DMP set fifo rate: %i\n", dmp_set_fifo_rate(DEFAULT_MPU_HZ));
+	printf("DMP enable %i\n", mpu_set_dmp_state(1));
+	mpu_set_int_level(1); // Interrupt is low when firing
+    dmp_set_interrupt_mode(DMP_INT_CONTINUOUS); // Fire interrupt on new FIFO value
 }
 
 int i2c_write(unsigned char slave_addr, unsigned char reg_addr,

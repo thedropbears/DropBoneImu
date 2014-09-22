@@ -8,6 +8,9 @@
 #define MPU6050_ADDR 0x68
 #define MPU6050_WHO_AM_I 0x75
 
+#define DEFAULT_MPU_HZ 10
+
+#include "inv_mpu_dmp_motion_driver.h"
 #include "inv_mpu.h"
 
 
