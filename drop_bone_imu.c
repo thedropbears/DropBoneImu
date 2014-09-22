@@ -8,6 +8,8 @@
 
 
 int main(int argc, char **argv){
+	struct int_param_s int_param;
+	printf("MPU init: %i\n", mpu_init(&int_param));
 	init();
 }
 
