@@ -10,6 +10,8 @@
 
 #define DEFAULT_MPU_HZ 10
 
+#define QUAT_SCALE 1073741824.0
+
 #include "inv_mpu_dmp_motion_driver.h"
 #include "inv_mpu.h"
 
@@ -50,5 +52,7 @@ void reg_int_cb(struct int_param_s *);
 
 inline int min ( int a, int b );
 inline void __no_operation();
+
+void euler(long* quat, float* euler_angles); // Convert quaternions to Euler angles
 
 #endif

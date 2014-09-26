@@ -5,11 +5,37 @@
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
+#include <math.h>
 
 
 int main(int argc, char **argv){
 
 	init();
+	short accel[3], gyro[3], sensors[1];
+	long quat[4];
+	unsigned long timestamp;
+	unsigned char more[0];
+        
+        while (1){
+        short status;
+        mpu_get_int_status(&status);
+        if (! (status & MPU_INT_STATUS_DMP) ){
+            continue;
+        }
+    
+        int fifo_read = dmp_read_fifo(gyro, accel, quat, &timestamp, sensors, more);
+
+        if (fifo_read != 0) {
+            printf("Error reading fifo.\n");
+        }
+
+        if (fifo_read == 0 && sensors[0]) {
+            float angles[3];
+euler(quat, angles);
+printf("Yaw: %+5.1f\tRoll: %+5.1f\tPitch: %+5.1f\n", angles[0]*180.0/3.14159, angles[1]*180.0/3.14159, angles[2]*180.0/3.14159);
+        }
+    }
+
 }
 
 int init(){
@@ -80,4 +106,15 @@ inline int min ( int a, int b ){
 }
 inline void __no_operation(){
     
+}
+
+void euler(long* quat, float* euler_angles) {
+float q[4];
+unsigned char i=0;
+for (i=0; i<4; ++i) {
+q[i] = (float)quat[i] / QUAT_SCALE;
+}
+euler_angles[0] = atan2(2*q[1]*q[2] - 2*q[0]*q[3], 2*q[0]*q[0] + 2*q[1]*q[1] - 1); // psi, yaw
+euler_angles[1] = -asin(2*q[1]*q[3] + 2*q[0]*q[2]); // theta, roll
+euler_angles[2] = atan2(2*q[2]*q[3] - 2*q[0]*q[1], 2*q[0]*q[0] + 2*q[3]*q[3] - 1); // phi, pitch
 }
