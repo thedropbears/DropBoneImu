@@ -46,7 +46,7 @@ int udp_send(float *data, unsigned int length)
 	for(i = 0; i<length; ++i) {
 		// we copy the ith element of data into a buffer in which
 		// there are 12 characters allocated for each element of data
-		sprintf(&msg[12*i], "%f,", data[i]);
+		sprintf(msg[12*i], "%f,", data[i]);
 	}
 	
 	bytes_sent = sendto(sockfd, msg, strlen(msg), 0, (struct sockaddr *)&their_addr, sizeof their_addr);
