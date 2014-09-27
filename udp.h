@@ -11,5 +11,5 @@ void set_up_socket();
 *  e.g. "31.4,15.9,26.5"
 * returns the number of bytes sent 
 * If sockfd is 0, then it will call the set_up_socket() function*/
-int udp_send(float * data, unsigned char length);
+int udp_send(float *data, unsigned int length);
 #endif
