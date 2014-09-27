@@ -49,7 +49,7 @@ int udp_send(float *data, unsigned int length)
 		sprintf(&msg[12*i], "%f,", data[i]);
 	}
 	
-	bytes_sent = sendto(sockfd, msg, strlen(msg), 0, (sockaddr *)&their_addr, sizeof their_addr);
+	bytes_sent = sendto(sockfd, msg, strlen(msg), 0, (struct sockaddr *)&their_addr, sizeof their_addr);
 	free(msg);
 	return bytes_sent;
 }
