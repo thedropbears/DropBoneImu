@@ -5,8 +5,13 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <stdlib.h>
+#include <string.h>
 
 static struct sockaddr_in their_addr; // connector address
+static int sockfd; // file descriptor for the socket
+static int so_broadcast = TRUE;
+static struct sockaddr_in their_addr // connector's address information
 
 // TODO: write broadcast function
 
@@ -32,15 +37,29 @@ void set_up_socket()
 		exit(1);
 	}
 	
-	if (bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen) == -1){
-		printf("Error: bind\n");
-		exit(1);
-	}
-	
 	short port = (short) SERVPORT;
 	
 	their_addr.sin_family = AF_INET;
 	their_addr.sin_port = htons(port);
 	inet_aton(SERVPORT, &their_addr.sin_addr);
 	memset(their_addr.sin_zero, '\0', sizeof their_addr.sin_zero);
+}
+
+int udp_send(float *data, unsigned int length)
+{
+	int i, j, position, bytes_sent;
+	char *msg[100], *temp;
+	if (sockfd == 0)
+		set_up_socket();
+	
+	// convert the array of floats into a string in msg
+	for(i = 0, position = 0; i<length; ++i, position += j) {
+		snprintf(temp,10,"%f",*data[i]);
+		// read temp into the end of msg
+		for(j = 0; temp[j] != '\0'; ++j)
+			msg[position + j] = temp[j];
+	}
+	
+	bytes_sent = sendto(sockfd, msg, strlen(msg), 0, (struct sockaddr *)&their_addr, sizeof their_addr);
+	return bytes_sent;
 }
