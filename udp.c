@@ -1,4 +1,4 @@
-#include <"udp.h">
+#include "udp.h"
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -11,7 +11,7 @@
 static struct sockaddr_in their_addr; // connector address
 static int sockfd; // file descriptor for the socket
 static int so_broadcast = TRUE;
-static struct sockaddr_in their_addr // connector's address information
+static struct sockaddr_in their_addr; // connector's address information
 
 // TODO: write broadcast function
 
@@ -47,19 +47,21 @@ void set_up_socket()
 
 int udp_send(float *data, unsigned int length)
 {
-	int i, j, position, bytes_sent;
-	char *msg[100], *temp;
+	int i, bytes_sent;
+	char *msg;
+	msg = malloc(12*length); // allocate 12 characters for each float in data
+	msg = "\0" // initialise msg to a string
 	if (sockfd == 0)
 		set_up_socket();
 	
 	// convert the array of floats into a string in msg
 	for(i = 0, position = 0; i<length; ++i, position += j) {
-		snprintf(temp,10,"%f",*data[i]);
-		// read temp into the end of msg
-		for(j = 0; temp[j] != '\0'; ++j)
-			msg[position + j] = temp[j];
+		// we copy the ith element of data into a buffer in which
+		// there are 12 characters allocated for each element of data
+		sprintf(msg[12*i], "%f,", data[i]);
 	}
 	
-	bytes_sent = sendto(sockfd, msg, strlen(msg), 0, (struct sockaddr *)&their_addr, sizeof their_addr);
+	bytes_sent = sendto(sockfd, msg, strlen(msg), 0, (sockaddr *)&their_addr, sizeof their_addr);
+	free(msg);
 	return bytes_sent;
 }
