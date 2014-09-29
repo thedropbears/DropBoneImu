@@ -15,7 +15,7 @@ void set_up_socket()
 {
 	int broadcast = 1;
 	
-	if (sockfd = socket(AF_INET, SOCK_DGRAM, 0) == -1) {
+	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0) == -1)) {
 		printf("Error: creating socket\n");
 		exit(1);
 	}
@@ -25,11 +25,8 @@ void set_up_socket()
 		exit(1);
 	}
 	
-	short port = (short) SERVPORT;
-	
 	their_addr.sin_family = AF_INET;
 	their_addr.sin_port = htons(port);
-	inet_aton(SERVPORT, &their_addr.sin_addr);
 	memset(their_addr.sin_zero, '\0', sizeof their_addr.sin_zero);
 }
 
@@ -41,12 +38,18 @@ int udp_send(float *data, unsigned int length)
 	if (sockfd == 0)
 		set_up_socket();
 	
-	sprintf(msg, "%f", data[0]);
+	sprintf(msg, "%f,", data[0]);
 	// convert the array of floats into a string in msg
-	for(i = 0; i<length; ++i) {
+	// we have already turned the first element of data into a string, so we set i to 1
+	for(i = 1; i<length; ++i) {
 		// we copy the ith element of data into a buffer in which
-		// there are 12 characters allocated for each element of data
-		sprintf(msg, "%s,%f,", msg,data[i]);
+		// there are 12 characters allocated for each element of data)
+		if(i < (length - 1))
+			sprintf(msg, "%f,", msg,data[i]);
+		else{
+			sprintf(msg, "%f", msg,data[i]);
+			msg[i*12] = '\0'
+		}
 	}
 	
 	
