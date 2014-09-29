@@ -26,7 +26,7 @@ void set_up_socket()
 	}
 	
 	their_addr.sin_family = AF_INET;
-	their_addr.sin_port = htons(port);
+	their_addr.sin_port = htons(SERVPORT);
 	memset(their_addr.sin_zero, '\0', sizeof their_addr.sin_zero);
 }
 
@@ -45,10 +45,10 @@ int udp_send(float *data, unsigned int length)
 		// we copy the ith element of data into a buffer in which
 		// there are 12 characters allocated for each element of data)
 		if(i < (length - 1))
-			sprintf(msg, "%f,", msg,data[i]);
+			sprintf(msg, "%f,", data[i]);
 		else{
-			sprintf(msg, "%f", msg,data[i]);
-			msg[i*12] = '\0'
+			sprintf(msg, "%f", data[i]);
+			msg[i*12] = '\0';
 		}
 	}
 	
