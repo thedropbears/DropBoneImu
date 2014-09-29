@@ -9,7 +9,7 @@ name = 'BeaglePotBlack'
 
 num_chars = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
 
-host_port = 4774 # port of the data broadcast
+port = 4774 # port of the data broadcast
 buff = 1024 # maximum size of the data from the BBB
 sock = 0; #useful to initialise it here
 
