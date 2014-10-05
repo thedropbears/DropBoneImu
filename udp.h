@@ -3,9 +3,10 @@
 
 #define BROADCASTADDR "255.255.255.255"
 #define SERVPORT 4774 // the port on which the packets are broadcast on
+#define FLEN 12 // maximum number of characters allowed for each float
 
 // set up a socket and configure it to broadcast data over UDP
-void set_up_socket();
+int set_up_socket();
 
 /* broadcast an array of floats over the network as strings
 *  e.g. "31.4,15.9,26.5"

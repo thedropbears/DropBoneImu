@@ -8,49 +8,54 @@
 #include <stdlib.h>
 #include <string.h>
 
-static int sockfd; // file descriptor for the socket
+static int sockfd = 0; // file descriptor for the socket
 static struct sockaddr_in their_addr; // connector's address information
 
-void set_up_socket()
+int set_up_socket()
 {
 	int broadcast = 1;
 	
 	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
 		printf("Error: creating socket\n");
-		exit(1);
+		return -1;
 	}
 	
 	if (setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof broadcast) == -1) {
 		printf("Error: setsockopt\n");
-		exit(1);
+		return -1;
 	}
 	
 	their_addr.sin_family = AF_INET;
 	their_addr.sin_port = htons(SERVPORT);
 	memset(their_addr.sin_zero, '\0', sizeof their_addr.sin_zero);
+	return 0;
 }
 
 int udp_send(float *data, unsigned int length)
 {
-	int i, bytes_sent, stringpos;
+	int i, bytes_sent, socket_return;
 	char *msg;
-	char temp[FLEN];
 	msg = malloc(FLEN*length); // allocate FLEN characters for each float in data
 	if (sockfd == 0)
-		set_up_socket();
+		socket_return = set_up_socket();
+
+	if (socket_return != 0) {
+		printf("Error in function set_up_socket\n");
+		return -1;
+	}
 	
+	sprintf(msg, "%f", data[0]);
 	// convert the array of floats into a string in msg
 	// we have already turned the first element of data into a string, so we set i to 1
-	for(i = 0, stringpos = 0; i<length; ++i, stringpos+=strlen(temp)) {
+	for(i = 1; i<length; ++i) {
 		// we copy the ith element of data into a buffer in which
 		// there are 12 characters allocated for each element of data)
-		sprintf(temp, "%f,", data[i]);
-		strcpy(msg+stringpos,temp);
+		sprintf(msg, "%s,%f", msg, data[i]);
 	}
 	
 	
 	bytes_sent = sendto(sockfd, msg, strlen(msg), 0, (struct sockaddr *)&their_addr, sizeof their_addr);
-	printf("%s\n", msg);
+	//printf("%s\n", msg);
 	free(msg);
 	return bytes_sent;
 }
