@@ -12,6 +12,8 @@
 
 #define QUAT_SCALE 1073741824.0
 
+#define PI 3.14159 // I hate magic numbers
+
 #include "inv_mpu_dmp_motion_driver.h"
 #include "inv_mpu.h"
 
