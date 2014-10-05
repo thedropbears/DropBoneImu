@@ -1,4 +1,5 @@
 #include "drop_bone_imu.h"
+#include "udp.h"
 
 #include <stdio.h>
 #include <linux/i2c-dev.h>
@@ -33,6 +34,7 @@ int main(int argc, char **argv){
             float angles[3];
 euler(quat, angles);
 printf("Yaw: %+5.1f\tRoll: %+5.1f\tPitch: %+5.1f\n", angles[0]*180.0/3.14159, angles[1]*180.0/3.14159, angles[2]*180.0/3.14159);
+        send_udp(angles, 3);
         }
     }
 
