@@ -1,7 +1,7 @@
 #ifndef udp_h
 #define udp_h
 
-#define BROADCASTADDR "255.255.255.255"
+#define BROADCASTADDR "192.168.7.3"
 #define SERVPORT 4774 // the port on which the packets are broadcast on
 #define FLEN 12 // maximum number of characters allowed for each float
 

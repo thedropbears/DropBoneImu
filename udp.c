@@ -39,7 +39,7 @@ int udp_send(float *data, unsigned int length)
 	if (sockfd == 0)
 		socket_return = set_up_socket();
 
-	if (socket_return != 0) {
+	if (socket_return == -1) {
 		printf("Error in function set_up_socket\n");
 		return -1;
 	}
