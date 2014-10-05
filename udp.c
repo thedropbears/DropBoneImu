@@ -15,7 +15,7 @@ void set_up_socket()
 {
 	int broadcast = 1;
 	
-	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0) == -1)) {
+	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
 		printf("Error: creating socket\n");
 		exit(1);
 	}
@@ -44,12 +44,7 @@ int udp_send(float *data, unsigned int length)
 	for(i = 1; i<length; ++i) {
 		// we copy the ith element of data into a buffer in which
 		// there are 12 characters allocated for each element of data)
-		if(i < (length - 1))
-			sprintf(msg, "%f,", data[i]);
-		else{
-			sprintf(msg, "%f", data[i]);
-			msg[i*12] = '\0';
-		}
+		sprintf(msg, "%f,", data[i]);
 	}
 	
 	
