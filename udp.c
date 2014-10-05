@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static int sockfd = 0; // file descriptor for the socket
+static int sockfd = -1; // file descriptor for the socket
 static struct sockaddr_in their_addr; // connector's address information
 
 int set_up_socket()
