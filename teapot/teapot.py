@@ -7,7 +7,7 @@ import select
 
 name = 'BeaglePotBlack'
 
-num_chars = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
+conversion_factor = 0.0174532925 # multiply to get degrees from radians
 
 port = 4774 # port of the data broadcast
 buff = 1024 # maximum size of the data from the BBB
@@ -59,7 +59,6 @@ def display():
     glRotatef(180,1,0,0) # The teapot is upside down by default
     glRotatef(90,0,1,0) # Make it face spout forward
     ####
-    # These next three should now be in the correct order
     global yaw, roll, pitch
     glRotatef(yaw,1,0,0)
     glRotatef(roll,0,1,0)
@@ -73,8 +72,7 @@ def display():
     return
 
 def animate():
-    ####
-    #Get data gets the values that are being broadcast over udp.
+    #gets the values that are being broadcast over udp.
     global roll, pitch, yaw
     [yaw, roll, pitch] = get_data()
     glutPostRedisplay()
@@ -91,18 +89,9 @@ def get_data():
     if not sock:
         make_sock()
     result = select.select([sock],[],[])
-    msg = result[0][0].recv(buff)
-    current_float_string = "" #hold the current float in string while it is constructed
-    float_array = [] #array to be returned
-    for char in msg:
-        if char == ',':
-            float_array.append(float(current_float_string))
-            current_float_string = ""
-        elif char == '\0': #assuming that packet contains '\0' on the end, may be wrong
-            float_array.append(float(current_float_string))
-            return float_array
-        elif char in num_chars:
-            current_float_string.append(char)
-    return [0, 0, 0]
+    packet = result[0][0].recv(buff)
+    exploded = packet.split(",")
+    return (conversion_factor*float(exploded[0]), conversion_factor*float(exploded[1]), conversion_factor*float(exploded[2]))
+    
 
 if __name__ == '__main__': main()
