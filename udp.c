@@ -33,16 +33,11 @@ int set_up_socket()
 
 int udp_send(float *data, unsigned int length)
 {
-	int i, bytes_sent, socket_return;
+	int i, bytes_sent;
 	char *msg;
 	msg = malloc(FLEN*length); // allocate FLEN characters for each float in data
-	if (sockfd == 0)
-		socket_return = set_up_socket();
-
-	if (socket_return == -1) {
-		printf("Error in function set_up_socket\n");
-		return -1;
-	}
+	if (sockfd == -1)
+		set_up_socket();
 	
 	sprintf(msg, "%f", data[0]);
 	// convert the array of floats into a string in msg
