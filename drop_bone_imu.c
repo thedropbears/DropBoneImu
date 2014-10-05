@@ -33,7 +33,7 @@ int main(int argc, char **argv){
         if (fifo_read == 0 && sensors[0]) {
             float angles[3];
 euler(quat, angles);
-printf("Yaw: %+5.1f\tRoll: %+5.1f\tPitch: %+5.1f\n", angles[0]*180.0/3.14159, angles[1]*180.0/3.14159, angles[2]*180.0/3.14159);
+printf("Yaw: %+5.1f\tRoll: %+5.1f\tPitch: %+5.1f\n", angles[0]*180.0/PI, angles[1]*180.0/PI, angles[2]*180.0/PI);
         send_udp(angles, 3);
         }
     }
