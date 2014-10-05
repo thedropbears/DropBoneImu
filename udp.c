@@ -32,23 +32,25 @@ void set_up_socket()
 
 int udp_send(float *data, unsigned int length)
 {
-	int i, bytes_sent;
+	int i, bytes_sent, stringpos;
 	char *msg;
-	msg = malloc(12*length); // allocate 12 characters for each float in data
+	char temp[FLEN];
+	msg = malloc(FLEN*length); // allocate FLEN characters for each float in data
 	if (sockfd == 0)
 		set_up_socket();
 	
-	sprintf(msg, "%f,", data[0]);
 	// convert the array of floats into a string in msg
 	// we have already turned the first element of data into a string, so we set i to 1
-	for(i = 1; i<length; ++i) {
+	for(i = 0, stringpos = 0; i<length; ++i, stringpos+=strlen(temp)) {
 		// we copy the ith element of data into a buffer in which
 		// there are 12 characters allocated for each element of data)
-		sprintf(msg, "%f,", data[i]);
+		sprintf(temp, "%f,", data[i]);
+		strcpy(msg+stringpos,temp);
 	}
 	
 	
 	bytes_sent = sendto(sockfd, msg, strlen(msg), 0, (struct sockaddr *)&their_addr, sizeof their_addr);
+	printf("%s\n", msg);
 	free(msg);
 	return bytes_sent;
 }
