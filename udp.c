@@ -6,10 +6,11 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdlib.h>
+#include <ifaddrs.h>
 #include <string.h>
 
 static int sockfd = -1; // file descriptor for the socket
-static struct sockaddr_in their_addr; // connector's address information
+static struct ifaddrs *ifap; // linked list of broadcast interfaces
 
 int set_up_socket()
 {
@@ -25,6 +26,13 @@ int set_up_socket()
 		return -1;
 	}
 	
+	if((getifaddrs(&ifap)) == -1) {
+		printf("Error: obtaining network interface information (getifaddrs)");
+		return -1
+	}
+	
+	
+	
 	their_addr.sin_family = AF_INET;
 	their_addr.sin_port = htons(SERVPORT);
 	memset(their_addr.sin_zero, '\0', sizeof their_addr.sin_zero);
@@ -34,6 +42,7 @@ int set_up_socket()
 int udp_send(float *data, unsigned int length)
 {
 	int i, bytes_sent;
+	struct ifaddrs *ifa;
 	char *msg;
 	msg = malloc(FLEN*length); // allocate FLEN characters for each float in data
 	if (sockfd == -1)
@@ -48,9 +57,16 @@ int udp_send(float *data, unsigned int length)
 		sprintf(msg, "%s,%f", msg, data[i]);
 	}
 	
-	
-	bytes_sent = sendto(sockfd, msg, strlen(msg), 0, (struct sockaddr *)&their_addr, sizeof their_addr);
+	for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
+		if (ifa->ifa_addr->sa_family==AF_INET) {
+			bytes_sent = sendto(sockfd, msg, strlen(msg), 0, ifa->ifa_ifu->ifu_broadaddr, sizeof ifa->ifa_ifu->ifu_broadaddr);
+			if (bytes_sent == -1) {
+				printf("Error: sendto function failed on interface: %s, broadcast address: %s\n", ifa->ifa_name, (inet_ntoa((struct sockaddr_in *) ifa->ifa_broadaddr)));
+				return -1;
+			}
+		}
+	}
 	//printf("%s\n", msg);
 	free(msg);
-	return bytes_sent;
+	return 0;
 }
