@@ -7,7 +7,9 @@
 #include <string.h>
 #include <fcntl.h>
 #include <math.h>
+#include <sys/ioctl.h>
 
+static int fd; // file descriptor for the I2C bus
 
 int main(int argc, char **argv){
 
@@ -34,7 +36,7 @@ int main(int argc, char **argv){
             float angles[3];
 euler(quat, angles);
 printf("Yaw: %+5.1f\tRoll: %+5.1f\tPitch: %+5.1f\n", angles[0]*180.0/PI, angles[1]*180.0/PI, angles[2]*180.0/PI);
-        send_udp(angles, 3);
+        udp_send(angles, 3);
         }
     }
 
@@ -56,6 +58,7 @@ int init(){
 	printf("DMP enable %i\n", mpu_set_dmp_state(1));
 	mpu_set_int_level(1); // Interrupt is low when firing
     dmp_set_interrupt_mode(DMP_INT_CONTINUOUS); // Fire interrupt on new FIFO value
+        return 0;
 }
 
 int i2c_write(unsigned char slave_addr, unsigned char reg_addr,
@@ -90,7 +93,8 @@ int open_bus() {
         perror("Failed to acquire bus access and/or talk to slave.\n");
         /* ERROR HANDLING; you can check errno to see what went wrong */
         return 1;
-    }	
+    }
+    return 0;
 }
 
 void delay_ms(unsigned long num_ms){
