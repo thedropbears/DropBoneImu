@@ -125,8 +125,8 @@ unsigned char i=0;
 for (i=0; i<4; ++i) {
 q[i] = (float)quat[i] / QUAT_SCALE;
 }
-euler_angles[0] = atan2(2*q[1]*q[2] - 2*q[0]*q[3], 2*q[0]*q[0] + 2*q[1]*q[1] - 1); // psi, yaw
-euler_angles[1] = -asin(2*q[1]*q[3] + 2*q[0]*q[2]); // theta, roll
+euler_angles[0] = -atan2(2*q[1]*q[2] - 2*q[0]*q[3], 2*q[0]*q[0] + 2*q[1]*q[1] - 1); // psi, yaw
+euler_angles[1] = asin(2*q[1]*q[3] + 2*q[0]*q[2]); // theta, roll
 euler_angles[2] = atan2(2*q[2]*q[3] - 2*q[0]*q[1], 2*q[0]*q[0] + 2*q[3]*q[3] - 1); // phi, pitch
 }
 
