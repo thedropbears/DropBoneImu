@@ -39,10 +39,7 @@ int set_up_socket()
             ba->sin_port = htons(SERVPORT);
         }
     }
-	
-	their_addr.sin_family = AF_INET;
-	their_addr.sin_port = htons(SERVPORT);
-	memset(their_addr.sin_zero, '\0', sizeof their_addr.sin_zero);
+
 	return 0;
 }
 
