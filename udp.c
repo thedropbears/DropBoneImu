@@ -29,7 +29,7 @@ int set_up_socket()
 	
 	if((getifaddrs(&ifap)) == -1) {
 		printf("Error: obtaining network interface information (getifaddrs)");
-		return -1
+		return -1;
 	}
 	
 	// set ports for the broadcast addresses
@@ -67,7 +67,7 @@ int udp_send(float *data, unsigned int length)
 			struct sockaddr_in *ba = (struct sockaddr_in *)ifa->ifa_broadaddr;
 			bytes_sent = sendto(sockfd, msg, strlen(msg), 0, (struct sockaddr *) ba, sizeof(struct sockaddr));
 			if (bytes_sent == -1) {
-				printf("Error: sendto function failed on interface: %s, broadcast address: %s\n", ifa->ifa_name, (inet_ntoa((struct sockaddr_in *) ifa->ifa_broadaddr)));
+				printf("Error: sendto function failed on interface: %s\n", ifa->ifa_name);
 				return_flag = -1;
 			}
 		}
