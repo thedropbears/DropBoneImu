@@ -12,6 +12,8 @@ port = 4774 # port of the data broadcast
 buf = 1024 # maximum size of the data from the BBB
 sock = False
 
+imu_zero_points = [0.0, 0,0, 0.0] # subtract these values from all of the next values (set when this program gets it's first batch of values)
+
 ######
 # THESE COME FROM UDP USING MAGIC AND CODE... hopefully
 pitch = 0.0
@@ -59,9 +61,9 @@ def display():
     glRotatef(90,0,1,0) # Make it face spout forward
     ####
     global yaw, roll, pitch
-    glRotatef(yaw,1,0,0)
-    glRotatef(roll,0,1,0)
-    glRotatef(pitch,0,0,1)
+    glRotatef(yaw,0,-1,0)
+    glRotatef(pitch,0,0,-1)
+    glRotatef(roll,-1,0,0)
     ####
     glutSolidTeapot(-2,20,-20)
     
@@ -84,12 +86,18 @@ def make_sock(port):
 #returns an array of floats or 0 if fail
 #it should return the values from udp...
 def get_data():
-    global sock, roll, pitch, yaw
+    global sock, roll, pitch, yaw, imu_zero_points
     if not sock:
         sock = make_sock(port)
     packet = sock.recv(buf)
     exploded = [float(val) for val in packet.split(',')]
     print exploded
+    if not imu_zero_points[0]:
+        imu_zero_point = exploded
+    else:
+        for value in exploded:
+            for zero_point in imu_zero_points:
+                value -= zero_point
     return exploded
 
 if __name__ == '__main__': main()
