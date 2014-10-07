@@ -14,6 +14,7 @@ static struct ifaddrs *ifap; // linked list of broadcast interfaces
 
 int set_up_socket()
 {
+	struct ifaddrs *ifa;
 	int broadcast = 1;
 	
 	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
@@ -31,7 +32,13 @@ int set_up_socket()
 		return -1
 	}
 	
-	
+	// set ports for the broadcast addresses
+	for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
+        if (ifa->ifa_addr->sa_family==AF_INET) {
+            struct sockaddr_in * ba = (struct sockaddr_in *)ifa->ifa_broadaddr;
+            ba->sin_port = htons(SERVPORT);
+        }
+    }
 	
 	their_addr.sin_family = AF_INET;
 	their_addr.sin_port = htons(SERVPORT);
@@ -41,7 +48,7 @@ int set_up_socket()
 
 int udp_send(float *data, unsigned int length)
 {
-	int i, bytes_sent;
+	int i, bytes_sent, return_flag;
 	struct ifaddrs *ifa;
 	char *msg;
 	msg = malloc(FLEN*length); // allocate FLEN characters for each float in data
@@ -58,15 +65,17 @@ int udp_send(float *data, unsigned int length)
 	}
 	
 	for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
+		return_flag = 0;
 		if (ifa->ifa_addr->sa_family==AF_INET) {
-			bytes_sent = sendto(sockfd, msg, strlen(msg), 0, ifa->ifa_ifu->ifu_broadaddr, sizeof ifa->ifa_ifu->ifu_broadaddr);
+			struct sockaddr_in *ba = (struct sockaddr_in *)ifa->ifa_broadaddr;
+			bytes_sent = sendto(sockfd, msg, strlen(msg), 0, (struct sockaddr *) ba, sizeof(struct sockaddr));
 			if (bytes_sent == -1) {
 				printf("Error: sendto function failed on interface: %s, broadcast address: %s\n", ifa->ifa_name, (inet_ntoa((struct sockaddr_in *) ifa->ifa_broadaddr)));
-				return -1;
+				return_flag = -1;
 			}
 		}
 	}
 	//printf("%s\n", msg);
 	free(msg);
-	return 0;
+	return return_flag;
 }
