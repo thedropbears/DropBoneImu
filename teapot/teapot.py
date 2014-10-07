@@ -2,16 +2,14 @@ from OpenGL.GLUT import *
 from OpenGL.GLU import *
 from OpenGL.GL import *
 import sys
-from socket import *
+from socket import socket, AF_INET, SOCK_DGRAM
 import select
 
 name = 'BeaglePotBlack'
 
-conversion_factor = 0.0174532925 # multiply to get degrees from radians
-
 port = 4774 # port of the data broadcast
-buff = 1024 # maximum size of the data from the BBB
-sock = 0; #useful to initialise it here
+buf = 1024 # maximum size of the data from the BBB
+sock = False
 
 ######
 # THESE COME FROM UDP USING MAGIC AND CODE... hopefully
@@ -74,24 +72,23 @@ def display():
 def animate():
     #gets the values that are being broadcast over udp.
     global roll, pitch, yaw
-    [yaw, roll, pitch] = get_data()
+    [yaw, roll, pitch] = [math.degrees(val) for val in get_data()[0:3]]
     glutPostRedisplay()
 
-#makes the socket
-def make_sock():
+def make_sock(port):
     sock = socket(AF_INET, SOCK_DGRAM)
-    sock.bind(('<broadcast>', port))
-    sock.setblocking(0)
+    sock.bind(('', port)) # bind to all interfaces/addresses by default
+    return sock
 
 #returns an array of floats or 0 if fail
 #it should return the values from udp...
 def get_data():
+    global sock
     if not sock:
-        make_sock()
-    result = select.select([sock],[],[])
-    packet = result[0][0].recv(buff)
-    exploded = packet.split(",")
-    return (conversion_factor*float(exploded[0]), conversion_factor*float(exploded[1]), conversion_factor*float(exploded[2]))
-    
+        sock = make_sock(port)
+    while True:
+        packet = sock.recv(buf)
+        exploded = [float(val) for val in packet.split(',')]
+        print exploded
 
 if __name__ == '__main__': main()
