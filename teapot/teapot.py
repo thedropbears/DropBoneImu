@@ -3,7 +3,8 @@ from OpenGL.GLU import *
 from OpenGL.GL import *
 import sys
 from socket import socket, AF_INET, SOCK_DGRAM
-import select
+import socket
+import math
 
 name = 'BeaglePotBlack'
 
@@ -76,19 +77,19 @@ def animate():
     glutPostRedisplay()
 
 def make_sock(port):
-    sock = socket(AF_INET, SOCK_DGRAM)
+    sock = socket.socket(AF_INET, SOCK_DGRAM)
     sock.bind(('', port)) # bind to all interfaces/addresses by default
     return sock
 
 #returns an array of floats or 0 if fail
 #it should return the values from udp...
 def get_data():
-    global sock
+    global sock, roll, pitch, yaw
     if not sock:
         sock = make_sock(port)
-    while True:
-        packet = sock.recv(buf)
-        exploded = [float(val) for val in packet.split(',')]
-        print exploded
+    packet = sock.recv(buf)
+    exploded = [float(val) for val in packet.split(',')]
+    print exploded
+    return exploded
 
 if __name__ == '__main__': main()
