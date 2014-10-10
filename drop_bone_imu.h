@@ -53,4 +53,7 @@ inline void __no_operation();
 
 void euler(long* quat, float* euler_angles); // Convert quaternions to Euler angles
 
+// Functions for setting gyro/accel orientation
+unsigned short inv_row_2_scale(const signed char *row);
+unsigned short inv_orientation_matrix_to_scalar(const signed char *mtx);
 #endif

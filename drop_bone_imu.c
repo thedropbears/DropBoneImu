@@ -10,6 +10,9 @@
 #include <sys/ioctl.h>
 
 static int fd; // file descriptor for the I2C bus
+static signed char gyro_orientation[9] = {1,  0,  0,
+                                           0, 1,  0,
+                                           0,  0,  1};
 
 int main(int argc, char **argv){
 
@@ -52,7 +55,9 @@ int init(){
 	printf("MPU sensor init: %i\n", mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL));
 	printf("MPU configure fifo: %i\n", mpu_configure_fifo(INV_XYZ_GYRO | INV_XYZ_ACCEL));
 	printf("DMP firmware: %i\n ",dmp_load_motion_driver_firmware());
-	unsigned short dmp_features = DMP_FEATURE_LP_QUAT | DMP_FEATURE_TAP | DMP_FEATURE_SEND_RAW_ACCEL | DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL;
+	printf("DMP orientation: %i\n ",dmp_set_orientation(
+            inv_orientation_matrix_to_scalar(gyro_orientation)));
+    unsigned short dmp_features = DMP_FEATURE_LP_QUAT | DMP_FEATURE_TAP | DMP_FEATURE_SEND_RAW_ACCEL | DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL;
 	printf("DMP feature enable: %i\n", dmp_enable_feature(dmp_features));
 	printf("DMP set fifo rate: %i\n", dmp_set_fifo_rate(DEFAULT_MPU_HZ));
 	printf("DMP enable %i\n", mpu_set_dmp_state(1));
@@ -123,4 +128,48 @@ q[i] = (float)quat[i] / QUAT_SCALE;
 euler_angles[0] = atan2(2*q[1]*q[2] - 2*q[0]*q[3], 2*q[0]*q[0] + 2*q[1]*q[1] - 1); // psi, yaw
 euler_angles[1] = -asin(2*q[1]*q[3] + 2*q[0]*q[2]); // theta, roll
 euler_angles[2] = atan2(2*q[2]*q[3] - 2*q[0]*q[1], 2*q[0]*q[0] + 2*q[3]*q[3] - 1); // phi, pitch
+}
+
+// Functions for setting gyro/accel orientation
+unsigned short inv_row_2_scale(const signed char *row)
+{
+    unsigned short b;
+
+    if (row[0] > 0)
+        b = 0;
+    else if (row[0] < 0)
+        b = 4;
+    else if (row[1] > 0)
+        b = 1;
+    else if (row[1] < 0)
+        b = 5;
+    else if (row[2] > 0)
+        b = 2;
+    else if (row[2] < 0)
+        b = 6;
+    else
+        b = 7;      // error
+    return b;
+}
+
+unsigned short inv_orientation_matrix_to_scalar(
+    const signed char *mtx)
+{
+    unsigned short scalar;
+
+    /*
+       XYZ  010_001_000 Identity Matrix
+       XZY  001_010_000
+       YXZ  010_000_001
+       YZX  000_010_001
+       ZXY  001_000_010
+       ZYX  000_001_010
+     */
+
+    scalar = inv_row_2_scale(mtx);
+    scalar |= inv_row_2_scale(mtx + 3) << 3;
+    scalar |= inv_row_2_scale(mtx + 6) << 6;
+
+
+    return scalar;
 }
