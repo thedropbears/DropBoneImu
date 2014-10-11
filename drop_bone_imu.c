@@ -59,7 +59,7 @@ int main(int argc, char **argv){
                 q_multiply(quat_offset, temp_quat, angles+9);    
                 rescale_s(gyro, angles+3, GYRO_SCALE, 3);
                 rescale_s(accel, angles+6, ACCEL_SCALE, 3); 
-                euler(angles+10, angles);
+                euler(angles+9, angles);
                 printf("Yaw: %+5.1f\tRoll: %+5.1f\tPitch: %+5.1f\n", angles[0]*180.0/PI, angles[1]*180.0/PI, angles[2]*180.0/PI);
                 udp_send(angles, 13);
             }
@@ -128,9 +128,9 @@ int open_bus() {
 int q_multiply(float* q1, float* q2, float* result) {
     float tmp[4];
     tmp[0] = q1[0]*q2[0] - q1[1]*q2[1] - q1[2]*q2[2] - q1[3]*q2[3];
-    tmp[1] = q1[0]*q2[0] + q1[1]*q2[1] + q1[2]*q2[2] - q1[3]*q2[3];
-    tmp[2] = q1[0]*q2[0] - q1[1]*q2[1] + q1[2]*q2[2] + q1[3]*q2[3];
-    tmp[3] = q1[0]*q2[0] + q1[1]*q2[1] - q1[2]*q2[2] + q1[3]*q2[3];
+    tmp[1] = q1[0]*q2[1] + q1[1]*q2[0] + q1[2]*q2[3] - q1[3]*q2[2];
+    tmp[2] = q1[0]*q2[2] - q1[1]*q2[3] + q1[2]*q2[0] + q1[3]*q2[1];
+    tmp[3] = q1[0]*q2[3] + q1[1]*q2[2] - q1[2]*q2[1] + q1[3]*q2[0];
     memcpy(result, tmp, 4*sizeof(float));
     return 0;
 }
