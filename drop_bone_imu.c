@@ -9,6 +9,8 @@
 #include <math.h>
 #include <sys/ioctl.h>
 
+static float last_quat[4] = { 0.0F };
+static float quat_offset[4] = { 0.0F };
 static int fd; // file descriptor for the I2C bus
 static signed char gyro_orientation[9] = {0,  1,  0,
                                            1, 0,  0,
@@ -36,16 +38,34 @@ int main(int argc, char **argv){
         }
 
         if (fifo_read == 0 && sensors[0]) {
-            float angles[NOSENTVALS];
-            rescale_l(quat, angles+9, QUAT_SCALE, 4); 
-            rescale_s(gyro, angles+3, GYRO_SCALE, 3);
-            rescale_s(accel, angles+6, ACCEL_SCALE, 3);
-            euler(angles+9, angles);
-            printf("Yaw: %+5.1f\tRoll: %+5.1f\tPitch: %+5.1f\n", angles[0]*180.0/PI, angles[1]*180.0/PI, angles[2]*180.0/PI);
-            udp_send(angles, 13);
+            float angles[NOSENTVALS]; 
+            float temp_quat[4];
+            rescale_l(quat, temp_quat, QUAT_SCALE, 4);
+            if (!quat_offset[0]) {
+                // check if the IMU has finished calibrating 
+                if((last_quat[1] > (temp_quat[1]-(0.1*(PI/180.0)))) && (last_quat[1] < (temp_quat[1]+(0.1*(PI/180.0))))) {
+                    // the IMU has finished calibrating
+                    int i;
+                    quat_offset[0] = temp_quat[0]; // treat the w value separately as it does not need to be reversed
+		            for(i=1;i<4;++i){
+                        quat_offset[i] = -temp_quat[i];
+                    }
+                 }
+                 else {
+                     memcpy(last_quat, temp_quat, 4*sizeof(float));
+                 }
+            }
+            else {
+                q_multiply(temp_quat, quat_offset, angles+9);    
+                rescale_s(gyro, angles+3, GYRO_SCALE, 3);
+                rescale_s(accel, angles+6, ACCEL_SCALE, 3); 
+                euler(angles+10, angles);
+                printf("Yaw: %+5.1f\tRoll: %+5.1f\tPitch: %+5.1f\n", angles[0]*180.0/PI, angles[1]*180.0/PI, angles[2]*180.0/PI);
+                udp_send(angles, 13);
+            }
         }
-    }
 
+}
 }
 
 int init(){
@@ -102,6 +122,16 @@ int open_bus() {
         /* ERROR HANDLING; you can check errno to see what went wrong */
         return 1;
     }
+    return 0;
+}
+
+int q_multiply(float* q1, float* q2, float* result) {
+    float tmp[4];
+    tmp[0] = q1[0]*q2[0] - q1[1]*q2[1] - q1[2]*q2[2] - q1[3]*q2[3];
+    tmp[1] = q1[0]*q2[0] + q1[1]*q2[1] + q1[2]*q2[2] - q1[3]*q2[3];
+    tmp[2] = q1[0]*q2[0] - q1[1]*q2[1] + q1[2]*q2[2] + q1[3]*q2[3];
+    tmp[3] = q1[0]*q2[0] + q1[1]*q2[1] - q1[2]*q2[2] + q1[3]*q2[3];
+    memcpy(result, tmp, 4*sizeof(float));
     return 0;
 }
 
