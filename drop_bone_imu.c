@@ -37,10 +37,12 @@ int main(int argc, char **argv){
 
         if (fifo_read == 0 && sensors[0]) {
             float angles[NOSENTVALS];
-            rescale(quat, angles+8, QUAT_SCALE, 4); 
-            euler(angles+8, angles);
-            printf("Yaw: %+5.1f\tRoll: %+5.1f\tPitch: %+5.1f\n", angles[8]*180.0/PI, angles[9]*180.0/PI, angles[10]*180.0/PI);
-            udp_send(angles, 3);
+            rescale_l(quat, angles+9, QUAT_SCALE, 4); 
+            rescale_s(gyro, angles+3, GYRO_SCALE, 3);
+            rescale_s(accel, angles+6, ACCEL_SCALE, 3);
+            euler(angles+9, angles);
+            printf("Yaw: %+5.1f\tRoll: %+5.1f\tPitch: %+5.1f\n", angles[0]*180.0/PI, angles[1]*180.0/PI, angles[2]*180.0/PI);
+            udp_send(angles, 13);
         }
     }
 
@@ -103,7 +105,14 @@ int open_bus() {
     return 0;
 }
 
-int rescale(long* input, float* output, float scale_factor, char length) {
+int rescale_l(long* input, float* output, float scale_factor, char length) {
+    int i;
+    for(i=0;i<length;++i)
+        output[i] = input[i] * scale_factor;
+    return 0;
+}
+
+int rescale_s(short* input, float* output, float scale_factor, char length) {
     int i;
     for(i=0;i<length;++i)
         output[i] = input[i] * scale_factor;
@@ -128,9 +137,9 @@ inline void __no_operation(){
 }
 
 void euler(float* q, float* euler_angles) {
-euler_angles[0] = -atan2(2*q[1]*q[2] - 2*q[0]*q[3], 2*q[0]*q[0] + 2*q[1]*q[1] - 1); // psi, yaw
-euler_angles[1] = asin(2*q[1]*q[3] + 2*q[0]*q[2]); // theta, roll
-euler_angles[2] = atan2(2*q[2]*q[3] - 2*q[0]*q[1], 2*q[0]*q[0] + 2*q[3]*q[3] - 1); // phi, pitch
+    euler_angles[0] = -atan2(2*q[1]*q[2] - 2*q[0]*q[3], 2*q[0]*q[0] + 2*q[1]*q[1] - 1); // psi, yaw
+    euler_angles[1] = asin(2*q[1]*q[3] + 2*q[0]*q[2]); // theta, roll
+    euler_angles[2] = atan2(2*q[2]*q[3] - 2*q[0]*q[1], 2*q[0]*q[0] + 2*q[3]*q[3] - 1); // phi, pitch
 }
 
 // Functions for setting gyro/accel orientation

@@ -10,9 +10,12 @@
 
 #define DEFAULT_MPU_HZ 10
 
-#define QUAT_SCALE (1.0/1073741824)
+#define PI 3.14159
+#define QUAT_SCALE (1.0/1073741824) 
 
-#define PI 3.14159 // I hate magic numbers
+#define GYRO_SCALE 1.0
+
+#define ACCEL_SCALE PI/(180*1.0/16384)
 
 #define NOSENTVALS 13 // the numver of values to be sent through UDP
 
@@ -45,7 +48,8 @@ int i2c_read(unsigned char slave_addr, unsigned char reg_addr,
 
 int open_bus();
 
-int rescale(long* input, float* output, float scale_factor, char length);
+int rescale_l(long* input, float* output, float scale_factor, char length);
+int rescale_s(short* input, float* output, float scale_factor, char length);
 void delay_ms(unsigned long num_ms);
 void get_ms(unsigned long *count);
 void reg_int_cb(struct int_param_s *);
