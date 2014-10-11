@@ -10,7 +10,7 @@
 
 #define DEFAULT_MPU_HZ 10
 
-#define QUAT_SCALE 1073741824.0
+#define QUAT_SCALE (1.0/1073741824)
 
 #define PI 3.14159 // I hate magic numbers
 
@@ -53,7 +53,7 @@ void reg_int_cb(struct int_param_s *);
 inline int min ( int a, int b );
 inline void __no_operation();
 
-void euler(long* quat, float* euler_angles); // Convert quaternions to Euler angles
+void euler(float* q, float* euler_angles); // Convert quaternions to Euler angles
 
 // Functions for setting gyro/accel orientation
 unsigned short inv_row_2_scale(const signed char *row);
