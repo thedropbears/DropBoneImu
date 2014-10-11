@@ -13,9 +13,9 @@
 #define PI 3.14159
 #define QUAT_SCALE (1.0/1073741824) 
 
-#define GYRO_SCALE 1.0
+#define GYRO_SCALE (PI/(180.0*16.384))
 
-#define ACCEL_SCALE PI/(180*1.0/16384)
+#define ACCEL_SCALE (PI/(180.0*16384))
 
 #define NOSENTVALS 13 // the numver of values to be sent through UDP
 
