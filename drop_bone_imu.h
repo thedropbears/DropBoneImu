@@ -19,6 +19,8 @@
 
 #define NOSENTVALS 13 // the numver of values to be sent through UDP
 
+#define CALIBRATION_CHANGE 0.05 // the amount that the IMU values have to change less than to indicate that calibration has finished
+
 #include "inv_mpu_dmp_motion_driver.h"
 #include "inv_mpu.h"
 

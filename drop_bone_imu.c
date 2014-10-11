@@ -43,7 +43,7 @@ int main(int argc, char **argv){
             rescale_l(quat, temp_quat, QUAT_SCALE, 4);
             if (!quat_offset[0]) {
                 // check if the IMU has finished calibrating 
-                if((last_quat[1] > (temp_quat[1]-(0.1*(PI/180.0)))) && (last_quat[1] < (temp_quat[1]+(0.1*(PI/180.0))))) {
+                if((last_quat[1] > (temp_quat[1]-CALIBRATION_CHANGE*PI/180.0)) && (last_quat[1] < (temp_quat[1]+CALIBRATION_CHANGE*PI/180.0))) {
                     // the IMU has finished calibrating
                     int i;
                     quat_offset[0] = temp_quat[0]; // treat the w value separately as it does not need to be reversed
