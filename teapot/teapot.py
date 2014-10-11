@@ -14,12 +14,16 @@ sock = False
 
 imu_zero_points = [0.0, 0,0, 0.0] # subtract these values from all of the next values (set when this program gets it's first batch of values)
 
+"""
 ######
 # THESE COME FROM UDP USING MAGIC AND CODE... hopefully
 pitch = 0.0
 roll = 0.0
 yaw = 0.0
 ######
+"""
+
+quat = [0.0, 0.0, 0.0, 0.0]
 
 def main():
     glutInit(sys.argv)
@@ -59,12 +63,18 @@ def display():
     glMaterialfv(GL_FRONT,GL_DIFFUSE,color)
     glRotatef(180,1,0,0) # The teapot is upside down by default
     glRotatef(90,0,1,0) # Make it face spout forward
+    """
     ####
     global yaw, roll, pitch
     glRotatef(yaw,0,-1,0)
     glRotatef(pitch,0,0,-1)
     glRotatef(roll,-1,0,0)
+    """
     ####
+    global quat
+    w = math.degrees(2.0*math.acos(quat[0]))
+    glRotatef(w, quat[1], quat[2], quat[3])
+    
     glutSolidTeapot(-2,20,-20)
     
     glPopMatrix()
@@ -74,8 +84,10 @@ def display():
 
 def animate():
     #gets the values that are being broadcast over udp.
-    global roll, pitch, yaw
-    [yaw, roll, pitch] = [math.degrees(val) for val in get_data()[0:3]]
+    """global roll, pitch, yaw
+    [yaw, roll, pitch] = [math.degrees(val) for val in get_data()[0:3]]"""
+    global quat
+    quat = get_data()[9:]
     glutPostRedisplay()
 
 def make_sock(port):
@@ -86,18 +98,19 @@ def make_sock(port):
 #returns an array of floats or 0 if fail
 #it should return the values from udp...
 def get_data():
-    global sock, roll, pitch, yaw, imu_zero_points
+    global sock#, imu_zero_points
     if not sock:
         sock = make_sock(port)
     packet = sock.recv(buf)
     exploded = [float(val) for val in packet.split(',')]
     print exploded
-    if not imu_zero_points[0]:
+    """if not imu_zero_points[0]:
         imu_zero_point = exploded
     else:
         for value in exploded:
             for zero_point in imu_zero_points:
                 value -= zero_point
+    """
     return exploded
 
 if __name__ == '__main__': main()
