@@ -36,10 +36,10 @@ int main(int argc, char **argv){
         }
 
         if (fifo_read == 0 && sensors[0]) {
-            float angles[3];
-euler(quat, angles);
-printf("Yaw: %+5.1f\tRoll: %+5.1f\tPitch: %+5.1f\n", angles[0]*180.0/PI, angles[1]*180.0/PI, angles[2]*180.0/PI);
-        udp_send(angles, 3);
+            float angles[3]; 
+            euler(quat, angles);
+            printf("Yaw: %+5.1f\tRoll: %+5.1f\tPitch: %+5.1f\n", angles[0]*180.0/PI, angles[1]*180.0/PI, angles[2]*180.0/PI);
+            udp_send(angles, 3);
         }
     }
 
@@ -99,6 +99,13 @@ int open_bus() {
         /* ERROR HANDLING; you can check errno to see what went wrong */
         return 1;
     }
+    return 0;
+}
+
+int rescale(long* input, float* output, float scale_factor, char length) {
+    int i;
+    for(i=0;i<length;++i)
+        output[i] = input[i] * scale_factor
     return 0;
 }
 

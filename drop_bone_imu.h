@@ -14,6 +14,8 @@
 
 #define PI 3.14159 // I hate magic numbers
 
+#define NOSENTVALS 13 // the numver of values to be sent through UDP
+
 #include "inv_mpu_dmp_motion_driver.h"
 #include "inv_mpu.h"
 
@@ -43,7 +45,7 @@ int i2c_read(unsigned char slave_addr, unsigned char reg_addr,
 
 int open_bus();
 
-
+int rescale(long* input, float* output, float scale_factor, char length);
 void delay_ms(unsigned long num_ms);
 void get_ms(unsigned long *count);
 void reg_int_cb(struct int_param_s *);
