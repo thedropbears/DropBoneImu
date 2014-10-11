@@ -10,8 +10,8 @@
 #include <sys/ioctl.h>
 
 static int fd; // file descriptor for the I2C bus
-static signed char gyro_orientation[9] = {1,  0,  0,
-                                           0, 1,  0,
+static signed char gyro_orientation[9] = {0,  1,  0,
+                                           1, 0,  0,
                                            0,  0,  1};
 
 int main(int argc, char **argv){
