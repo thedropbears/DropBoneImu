@@ -43,7 +43,7 @@ int main(int argc, char **argv){
             rescale_l(quat, temp_quat, QUAT_SCALE, 4);
             if (!quat_offset[0]) {
                 // check if the IMU has finished calibrating 
-                if((last_quat[1] > (temp_quat[1]-CALIBRATION_CHANGE*PI/180.0)) && (last_quat[1] < (temp_quat[1]+CALIBRATION_CHANGE*PI/180.0))) {
+                if((last_quat[1] > (temp_quat[1]-(CALIBRATION_CHANGE*PI/180.0))) && (last_quat[1] < (temp_quat[1]+(CALIBRATION_CHANGE*PI/180.0)))) {
                     // the IMU has finished calibrating
                     int i;
                     quat_offset[0] = temp_quat[0]; // treat the w value separately as it does not need to be reversed
@@ -56,7 +56,7 @@ int main(int argc, char **argv){
                  }
             }
             else {
-                q_multiply(temp_quat, quat_offset, angles+9);    
+                q_multiply(quat_offset, temp_quat, angles+9);    
                 rescale_s(gyro, angles+3, GYRO_SCALE, 3);
                 rescale_s(accel, angles+6, ACCEL_SCALE, 3); 
                 euler(angles+10, angles);
