@@ -105,7 +105,7 @@ int open_bus() {
 int rescale(long* input, float* output, float scale_factor, char length) {
     int i;
     for(i=0;i<length;++i)
-        output[i] = input[i] * scale_factor
+        output[i] = input[i] * scale_factor;
     return 0;
 }
 
