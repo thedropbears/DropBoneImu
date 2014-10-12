@@ -12,7 +12,7 @@ port = 4774 # port of the data broadcast
 buf = 1024 # maximum size of the data from the BBB
 sock = False
 
-imu_zero_points = [0.0, 0,0, 0.0] # subtract these values from all of the next values (set when this program gets it's first batch of values)
+imu_zero_points = [0.0, 0.0, 0,0, 0.0] # subtract these values from all of the next values (set when this program gets it's first batch of values)
 
 """
 ######
@@ -61,8 +61,8 @@ def display():
     glPushMatrix()
     color = [1.0,0.,0.,1.]
     glMaterialfv(GL_FRONT,GL_DIFFUSE,color)
-    glRotatef(180,1,0,0) # The teapot is upside down by default
-    glRotatef(90,0,1,0) # Make it face spout forward
+    glRotatef(90,0,1,0) # Align to the screen axes
+    glRotatef(-90,1,0,0)
     """
     ####
     global yaw, roll, pitch
@@ -73,7 +73,10 @@ def display():
     ####
     global quat
     w = math.degrees(2.0*math.acos(quat[0]))
-    glRotatef(w, quat[1], quat[2], quat[3])
+    glRotatef(w, quat[1], -quat[2], quat[3])
+    
+    glRotatef(180,0,1,0) # Make it face spout forward
+    glRotatef(90,1,0,0) # The teapot is upside down by default
     
     glutSolidTeapot(-2,20,-20)
     
