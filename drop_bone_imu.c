@@ -2,12 +2,14 @@
 #include "udp.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <linux/i2c-dev.h>
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
 #include <math.h>
 #include <sys/ioctl.h>
+#include <time.h>
 
 static float last_quat[4] = { 0.0F };
 static float quat_offset[4] = { 0.0F };
@@ -23,8 +25,13 @@ int main(int argc, char **argv){
 	long quat[4];
 	unsigned long timestamp;
 	unsigned char more[0];
-        
-        while (1){
+    time_t sec, current_time; // set to the time before calibration
+    int running = 0; // set to 1 once the calibration has been done
+
+    time(&sec);        
+    printf("Read system time\n");
+
+    while (1){
         short status;
         mpu_get_int_status(&status);
         if (! (status & MPU_INT_STATUS_DMP) ){
@@ -37,13 +44,14 @@ int main(int argc, char **argv){
             printf("Error reading fifo.\n");
         }
 
-        if (fifo_read == 0 && sensors[0]) {
+
+        if (fifo_read == 0 && sensors[0] && running) {
             float angles[NOSENTVALS]; 
             float temp_quat[4];
             rescale_l(quat, temp_quat, QUAT_SCALE, 4);
             if (!quat_offset[0]) {
                 // check if the IMU has finished calibrating 
-                if((last_quat[1] > (temp_quat[1]-(CALIBRATION_CHANGE*PI/180.0))) && (last_quat[1] < (temp_quat[1]+(CALIBRATION_CHANGE*PI/180.0)))) {
+                if(abs(last_quat[1]-temp_quat[1]) < THRESHOLD) {
                     // the IMU has finished calibrating
                     int i;
                     quat_offset[0] = temp_quat[0]; // treat the w value separately as it does not need to be reversed
@@ -56,16 +64,31 @@ int main(int argc, char **argv){
                  }
             }
             else {
-                q_multiply(quat_offset, temp_quat, angles+9);    
+                q_multiply(quat_offset, temp_quat, angles+9); // multiply the current quaternstion by the offset caputured above to re-zero the values
+                // rescale the gyro and accel values received from the IMU from longs that the
+                // it uses for efficiency to the floats that they actually are and store these values in the angles array
                 rescale_s(gyro, angles+3, GYRO_SCALE, 3);
-                rescale_s(accel, angles+6, ACCEL_SCALE, 3); 
+                rescale_s(accel, angles+6, ACCEL_SCALE, 3);
+                // turn the quaternation (that is already in angles) into euler angles and store it in the angles array
                 euler(angles+9, angles);
                 printf("Yaw: %+5.1f\tRoll: %+5.1f\tPitch: %+5.1f\n", angles[0]*180.0/PI, angles[1]*180.0/PI, angles[2]*180.0/PI);
+                // send the values in angles over UDP as a string (in udp.c/h)
                 udp_send(angles, 13);
             }
         }
+            else {
+                time(&current_time);
+                // check if more than CALIBRATION_TIME seconds has passed since calibration started
+                if(abs(difftime(sec, current_time)) > CALIBRATION_TIME) {
+		            printf("Calibration time up...\n");
+		            // allow all of the calculating, broadcasting and offset code from above to run
+                    running = 1;
+                }
+                else
+                    printf("Calibrating...\n");
+            }
 
-}
+    }
 }
 
 int init(){
@@ -125,6 +148,7 @@ int open_bus() {
     return 0;
 }
 
+// multiply two quaternions
 int q_multiply(float* q1, float* q2, float* result) {
     float tmp[4];
     tmp[0] = q1[0]*q2[0] - q1[1]*q2[1] - q1[2]*q2[2] - q1[3]*q2[3];
@@ -135,6 +159,7 @@ int q_multiply(float* q1, float* q2, float* result) {
     return 0;
 }
 
+// rescale an array of longs by scale factor into an array of floats
 int rescale_l(long* input, float* output, float scale_factor, char length) {
     int i;
     for(i=0;i<length;++i)
@@ -142,6 +167,7 @@ int rescale_l(long* input, float* output, float scale_factor, char length) {
     return 0;
 }
 
+// rescale an array of shorts by scale factor into an array of floats
 int rescale_s(short* input, float* output, float scale_factor, char length) {
     int i;
     for(i=0;i<length;++i)
