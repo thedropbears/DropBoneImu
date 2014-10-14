@@ -19,7 +19,9 @@
 
 #define NOSENTVALS 13 // the numver of values to be sent through UDP
 
-#define CALIBRATION_CHANGE 0.05 // the amount that the IMU values have to change less than to indicate that calibration has finished
+#define THRESHOLD 0.000001 // the amount that the IMU values have to change less than to indicate that calibration has finished
+
+#define CALIBRATION_TIME 15.0
 
 #include "inv_mpu_dmp_motion_driver.h"
 #include "inv_mpu.h"
