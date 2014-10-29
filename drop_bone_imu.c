@@ -12,7 +12,7 @@
 #include <sys/ioctl.h>
 #include <time.h>
 
-static float last_quat[4] = { 0.0F };
+static float last_euler[3] = { 99.9, 99.9, 99.9 };
 static float quat_offset[4] = { 0.0F };
 static int fd; // file descriptor for the I2C bus
 static signed char gyro_orientation[9] = {0,  1,  0,
@@ -58,24 +58,27 @@ int main(int argc, char **argv){
 
             if (running) {
                 float angles[NOSENTVALS]; 
-                float temp_quat[4];
-                rescale_l(quat, temp_quat, QUAT_SCALE, 4);
+                rescale_l(quat, angles+9, QUAT_SCALE, 4);
+                
                 if (!quat_offset[0]) {
+                    euler(angles+9, angles); // Determine calibration based on settled Euler angles
                     // check if the IMU has finished calibrating 
-                    if(abs(last_quat[1]-temp_quat[1]) < THRESHOLD) {
+                    if(abs(last_euler[0]-angles[0]) < THRESHOLD 
+                            && abs(last_euler[1]-angles[1]) < THRESHOLD 
+                            && abs(last_euler[2]-angles[2]) < THRESHOLD) {
                         // the IMU has finished calibrating
                         int i;
-                        quat_offset[0] = temp_quat[0]; // treat the w value separately as it does not need to be reversed
+                        quat_offset[0] = angles[9]; // treat the w value separately as it does not need to be reversed
                         for(i=1;i<4;++i){
-                            quat_offset[i] = -temp_quat[i];
+                            quat_offset[i] = -angles[i+9];
                         }
                     }
                     else {
-                        memcpy(last_quat, temp_quat, 4*sizeof(float));
+                        memcpy(last_euler, angles, 3*sizeof(float));
                     }
                 }
                 else {
-                    q_multiply(quat_offset, temp_quat, angles+9); // multiply the current quaternstion by the offset caputured above to re-zero the values
+                    q_multiply(quat_offset, angles+9, angles+9); // multiply the current quaternstion by the offset caputured above to re-zero the values
                     // rescale the gyro and accel values received from the IMU from longs that the
                     // it uses for efficiency to the floats that they actually are and store these values in the angles array
                     rescale_s(gyro, angles+3, GYRO_SCALE, 3);
