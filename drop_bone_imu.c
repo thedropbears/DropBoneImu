@@ -16,22 +16,22 @@ static float last_quat[4] = { 0.0F };
 static float quat_offset[4] = { 0.0F };
 static int fd; // file descriptor for the I2C bus
 static signed char gyro_orientation[9] = {0,  1,  0,
-                                           1, 0,  0,
-                                           0,  0,  1};
+        1, 0,  0,
+        0,  0,  1};
 
 int main(int argc, char **argv){
 
-	init();
-	short accel[3], gyro[3], sensors[1];
-	long quat[4];
-	unsigned long timestamp;
-	unsigned char more[0];
+    init();
+    short accel[3], gyro[3], sensors[1];
+    long quat[4];
+    unsigned long timestamp;
+    unsigned char more[0];
     struct pollfd fdset[1];
     char buf[1];
-    
+
     // File descriptor for the GPIO interrupt pin
     int gpio_fd = open(GPIO_INT_FILE, O_RDONLY | O_NONBLOCK);
-    
+
     // Create an event on the GPIO value file
     memset((void*)fdset, 0, sizeof(fdset));
     fdset[0].fd = gpio_fd;
@@ -45,11 +45,11 @@ int main(int argc, char **argv){
     while (1){
         // Blocking poll to wait for an edge on the interrupt
         poll(fdset, 1, -1);
-        
+
         if (fdset[0].revents & POLLPRI) {
             // Read the file to make it reset the interrupt
             read(fdset[0].fd, buf, 1);
-        
+
             int fifo_read = dmp_read_fifo(gyro, accel, quat, &timestamp, sensors, more);
             if (fifo_read != 0) {
                 printf("Error reading fifo.\n");
@@ -68,10 +68,10 @@ int main(int argc, char **argv){
                         for(i=1;i<4;++i){
                             quat_offset[i] = -temp_quat[i];
                         }
-                     }
-                     else {
-                         memcpy(last_quat, temp_quat, 4*sizeof(float));
-                     }
+                    }
+                    else {
+                        memcpy(last_quat, temp_quat, 4*sizeof(float));
+                    }
                 }
                 else {
                     q_multiply(quat_offset, temp_quat, angles+9); // multiply the current quaternstion by the offset caputured above to re-zero the values
@@ -86,63 +86,63 @@ int main(int argc, char **argv){
                     udp_send(angles, 13);
                 }
             }
-                else {
-                    time(&current_time);
-                    // check if more than CALIBRATION_TIME seconds has passed since calibration started
-                    if(abs(difftime(sec, current_time)) > CALIBRATION_TIME) {
-                        printf("Calibration time up...\n");
-                        // allow all of the calculating, broadcasting and offset code from above to run
-                        running = 1;
-                    }
-                    else
-                        printf("Calibrating...\n");
+            else {
+                time(&current_time);
+                // check if more than CALIBRATION_TIME seconds has passed since calibration started
+                if(abs(difftime(sec, current_time)) > CALIBRATION_TIME) {
+                    printf("Calibration time up...\n");
+                    // allow all of the calculating, broadcasting and offset code from above to run
+                    running = 1;
                 }
-    
+                else
+                    printf("Calibrating...\n");
+            }
+
         }
     }
 }
 
 int init(){
-	open_bus();
+    open_bus();
     unsigned char whoami=0;
     i2c_read(MPU6050_ADDR, MPU6050_WHO_AM_I, 1, &whoami);
     printf("WHO_AM_I: %x\n", whoami);
-	struct int_param_s int_param;
-	printf("MPU init: %i\n", mpu_init(&int_param));
-	printf("MPU sensor init: %i\n", mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL));
-	printf("MPU configure fifo: %i\n", mpu_configure_fifo(INV_XYZ_GYRO | INV_XYZ_ACCEL));
-	printf("DMP firmware: %i\n ",dmp_load_motion_driver_firmware());
-	printf("DMP orientation: %i\n ",dmp_set_orientation(
+    struct int_param_s int_param;
+    printf("MPU init: %i\n", mpu_init(&int_param));
+    printf("MPU sensor init: %i\n", mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL));
+    printf("MPU configure fifo: %i\n", mpu_configure_fifo(INV_XYZ_GYRO | INV_XYZ_ACCEL));
+    printf("DMP firmware: %i\n ",dmp_load_motion_driver_firmware());
+    printf("DMP orientation: %i\n ",dmp_set_orientation(
             inv_orientation_matrix_to_scalar(gyro_orientation)));
     unsigned short dmp_features = DMP_FEATURE_LP_QUAT | DMP_FEATURE_TAP | DMP_FEATURE_SEND_RAW_ACCEL | DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL;
-	printf("DMP feature enable: %i\n", dmp_enable_feature(dmp_features));
-	printf("DMP set fifo rate: %i\n", dmp_set_fifo_rate(DEFAULT_MPU_HZ));
-	printf("DMP enable %i\n", mpu_set_dmp_state(1));
-	mpu_set_int_level(1); // Interrupt is low when firing
+    printf("DMP feature enable: %i\n", dmp_enable_feature(dmp_features));
+    printf("DMP set fifo rate: %i\n", dmp_set_fifo_rate(DEFAULT_MPU_HZ));
+    printf("DMP enable %i\n", mpu_set_dmp_state(1));
+    mpu_set_int_level(1); // Interrupt is low when firing
     dmp_set_interrupt_mode(DMP_INT_CONTINUOUS); // Fire interrupt on new FIFO value
-        return 0;
+    return 0;
 }
 
 int i2c_write(unsigned char slave_addr, unsigned char reg_addr,
-    unsigned char length, unsigned char const *data){
-		unsigned char tmp[length+1];
-		tmp[0] = reg_addr;
-		memcpy(tmp+1, data, length);
-		if (write(fd, tmp, length+1) != length + 1){
-			return -1;
-		}
-		return 0; 
+        unsigned char length, unsigned char const *data){
+    unsigned char tmp[length+1];
+    tmp[0] = reg_addr;
+    memcpy(tmp+1, data, length);
+    if (write(fd, tmp, length+1) != length + 1){
+        return -1;
+    }
+    return 0; 
 }
 int i2c_read(unsigned char slave_addr, unsigned char reg_addr,
-    unsigned char length, unsigned char *data){
-        if (write(fd,&reg_addr, 1) != 1){
-			return -1;
-		}
-		if  (read(fd,data, length) != length){
-			return -2;
-		}
-		
-		return 0;
+        unsigned char length, unsigned char *data){
+    if (write(fd,&reg_addr, 1) != 1){
+        return -1;
+    }
+    if  (read(fd,data, length) != length){
+        return -2;
+    }
+
+    return 0;
 }
 
 int open_bus() { 
@@ -187,20 +187,20 @@ int rescale_s(short* input, float* output, float scale_factor, char length) {
 }
 
 void delay_ms(unsigned long num_ms){
-    
+
 }
 void get_ms(unsigned long *count){
-    
+
 }
 void reg_int_cb(struct int_param_s *param){
-    
+
 }
 
 inline int min ( int a, int b ){
     return a < b ? a : b;
 }
 inline void __no_operation(){
-    
+
 }
 
 void euler(float* q, float* euler_angles) {
@@ -232,7 +232,7 @@ unsigned short inv_row_2_scale(const signed char *row)
 }
 
 unsigned short inv_orientation_matrix_to_scalar(
-    const signed char *mtx)
+        const signed char *mtx)
 {
     unsigned short scalar;
 
