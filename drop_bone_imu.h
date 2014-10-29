@@ -11,7 +11,8 @@
 #define DEFAULT_MPU_HZ 10
 
 #define PI 3.14159
-#define QUAT_SCALE (1.0/1073741824) 
+#define QUAT_SCALE 1073741824.0 // 1<<30
+#define GPIO_INT_FILE "/sys/class/gpio/gpio14/value" 
 
 #define GYRO_SCALE (PI/(180.0*16.384))
 
