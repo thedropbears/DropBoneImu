@@ -53,9 +53,10 @@ int main(int argc, char **argv){
             int fifo_read = dmp_read_fifo(gyro, accel, quat, &timestamp, sensors, more);
             if (fifo_read != 0) {
                 printf("Error reading fifo.\n");
+                continue;
             }
 
-            if (fifo_read == 0 && sensors[0] && running) {
+            if (running) {
                 float angles[NOSENTVALS]; 
                 float temp_quat[4];
                 rescale_l(quat, temp_quat, QUAT_SCALE, 4);
