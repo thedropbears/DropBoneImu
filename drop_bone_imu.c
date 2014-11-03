@@ -16,7 +16,7 @@ static float last_euler[3] = { 99.9, 99.9, 99.9 };
 static float quat_offset[4] = { 0.0F };
 static int fd; // file descriptor for the I2C bus
 static signed char gyro_orientation[9] = {0,  1,  0,
-        1, 0,  0,
+        -1, 0,  0,
         0,  0,  1};
 
 int main(int argc, char **argv){
@@ -28,7 +28,8 @@ int main(int argc, char **argv){
     unsigned char more[0];
     struct pollfd fdset[1];
     char buf[1];
-
+    
+ 
     // File descriptor for the GPIO interrupt pin
     int gpio_fd = open(GPIO_INT_FILE, O_RDONLY | O_NONBLOCK);
 
@@ -40,7 +41,7 @@ int main(int argc, char **argv){
 
     time(&sec);
     printf("Read system time\n");
-    printf("Calibrating");
+    printf("Calibrating\n");
 
     while (1){
         // Blocking poll to wait for an edge on the interrupt
@@ -52,7 +53,7 @@ int main(int argc, char **argv){
 
             int fifo_read = dmp_read_fifo(gyro, accel, quat, &timestamp, sensors, more);
             if (fifo_read != 0) {
-                printf("Error reading fifo.\n");
+                //printf("Error reading fifo.\n");
                 continue;
             }
 
@@ -89,7 +90,7 @@ int main(int argc, char **argv){
                 rescale_s(accel, angles+6, ACCEL_SCALE, 3);
                 // turn the quaternation (that is already in angles) into euler angles and store it in the angles array
                 euler(angles+9, angles);
-                printf("Yaw: %+5.1f\tRoll: %+5.1f\tPitch: %+5.1f\n", angles[0]*180.0/PI, angles[1]*180.0/PI, angles[2]*180.0/PI);
+                printf("Yaw: %+5.1f\tPitch: %+5.1f\tRoll: %+5.1f\n", angles[0]*180.0/PI, angles[1]*180.0/PI, angles[2]*180.0/PI);
                 // send the values in angles over UDP as a string (in udp.c/h)
                 udp_send(angles, 13);
             }
@@ -200,8 +201,8 @@ inline void __no_operation(){
 
 void euler(float* q, float* euler_angles) {
     euler_angles[0] = -atan2(2*q[1]*q[2] - 2*q[0]*q[3], 2*q[0]*q[0] + 2*q[1]*q[1] - 1); // psi, yaw
-    euler_angles[1] = asin(2*q[1]*q[3] + 2*q[0]*q[2]); // theta, roll
-    euler_angles[2] = atan2(2*q[2]*q[3] - 2*q[0]*q[1], 2*q[0]*q[0] + 2*q[3]*q[3] - 1); // phi, pitch
+    euler_angles[1] = asin(2*q[1]*q[3] + 2*q[0]*q[2]); // phi, pitch
+    euler_angles[2] = -atan2(2*q[2]*q[3] - 2*q[0]*q[1], 2*q[0]*q[0] + 2*q[3]*q[3] - 1); // theta, roll
 }
 
 // Functions for setting gyro/accel orientation
@@ -247,4 +248,3 @@ unsigned short inv_orientation_matrix_to_scalar(
 
     return scalar;
 }
-
