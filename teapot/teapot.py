@@ -73,7 +73,7 @@ def display():
     ####
     global quat
     w = math.degrees(2.0*math.acos(quat[0]))
-    glRotatef(w, quat[1], -quat[2], quat[3])
+    glRotatef(w, quat[1], quat[2], quat[3])
     
     glRotatef(180,0,1,0) # Make it face spout forward
     glRotatef(90,1,0,0) # The teapot is upside down by default
