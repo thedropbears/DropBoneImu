@@ -61,6 +61,7 @@ int main(int argc, char **argv){
             rescale_l(quat, angles+9, QUAT_SCALE, 4);
 
             if (!quat_offset[0]) {
+                advance_spinner(); // Heartbeat to let the user know we are running"
                 euler(angles+9, angles); // Determine calibration based on settled Euler angles
                 // check if the IMU has finished calibrating
                 time(&current_time);
@@ -247,4 +248,14 @@ unsigned short inv_orientation_matrix_to_scalar(
 
 
     return scalar;
+}
+
+void advance_spinner() {
+    static char bars[] = { '/', '-', '\\', '|' };
+    static int nbars = sizeof(bars) / sizeof(char);
+    static int pos = 0;
+
+    printf("%c\b", bars[pos]);
+    fflush(stdout);
+    pos = (pos + 1) % nbars;
 }
