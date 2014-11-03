@@ -22,7 +22,7 @@
 
 #define THRESHOLD (0.1*PI/180.0) // the amount that the IMU Euler values have to change less than to indicate that calibration has finished
 
-#define CALIBRATION_TIME 15.0
+#define CALIBRATION_TIME 20.0
 
 #include "inv_mpu_dmp_motion_driver.h"
 #include "inv_mpu.h"

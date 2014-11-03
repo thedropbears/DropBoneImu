@@ -37,10 +37,10 @@ int main(int argc, char **argv){
     fdset[0].fd = gpio_fd;
     fdset[0].events = POLLPRI;
     time_t sec, current_time; // set to the time before calibration
-    int running = 0; // set to 1 once the calibration has been done
 
-    time(&sec);        
+    time(&sec);
     printf("Read system time\n");
+    printf("Calibrating");
 
     while (1){
         // Blocking poll to wait for an edge on the interrupt
@@ -56,52 +56,43 @@ int main(int argc, char **argv){
                 continue;
             }
 
-            if (running) {
-                float angles[NOSENTVALS]; 
-                rescale_l(quat, angles+9, QUAT_SCALE, 4);
-                
-                if (!quat_offset[0]) {
-                    euler(angles+9, angles); // Determine calibration based on settled Euler angles
-                    // check if the IMU has finished calibrating 
-                    if(abs(last_euler[0]-angles[0]) < THRESHOLD 
-                            && abs(last_euler[1]-angles[1]) < THRESHOLD 
-                            && abs(last_euler[2]-angles[2]) < THRESHOLD) {
-                        // the IMU has finished calibrating
-                        int i;
-                        quat_offset[0] = angles[9]; // treat the w value separately as it does not need to be reversed
-                        for(i=1;i<4;++i){
-                            quat_offset[i] = -angles[i+9];
-                        }
-                    }
-                    else {
-                        memcpy(last_euler, angles, 3*sizeof(float));
+            float angles[NOSENTVALS];
+            rescale_l(quat, angles+9, QUAT_SCALE, 4);
+
+            if (!quat_offset[0]) {
+                euler(angles+9, angles); // Determine calibration based on settled Euler angles
+                // check if the IMU has finished calibrating
+                time(&current_time);
+                // check if more than CALIBRATION_TIME seconds has passed since calibration started
+                if((fabs(last_euler[0]-angles[0]) < THRESHOLD
+                        && fabs(last_euler[1]-angles[1]) < THRESHOLD
+                        && fabs(last_euler[2]-angles[2]) < THRESHOLD)
+                        || difftime(current_time, sec) > CALIBRATION_TIME) {
+                    printf("\nCALIBRATED! Threshold: %f Elapsed time: %f\n", CALIBRATION_TIME, difftime(current_time, sec));
+                    printf("CALIBRATED! Threshold: %.5f Errors: %.5f %.5f %.5f\n", THRESHOLD, fabs(last_euler[0]-angles[0]), last_euler[1]-angles[1], last_euler[2]-angles[2]);
+                    // the IMU has finished calibrating
+                    int i;
+                    quat_offset[0] = angles[9]; // treat the w value separately as it does not need to be reversed
+                    for(i=1;i<4;++i){
+                        quat_offset[i] = -angles[i+9];
                     }
                 }
                 else {
-                    q_multiply(quat_offset, angles+9, angles+9); // multiply the current quaternstion by the offset caputured above to re-zero the values
-                    // rescale the gyro and accel values received from the IMU from longs that the
-                    // it uses for efficiency to the floats that they actually are and store these values in the angles array
-                    rescale_s(gyro, angles+3, GYRO_SCALE, 3);
-                    rescale_s(accel, angles+6, ACCEL_SCALE, 3);
-                    // turn the quaternation (that is already in angles) into euler angles and store it in the angles array
-                    euler(angles+9, angles);
-                    printf("Yaw: %+5.1f\tRoll: %+5.1f\tPitch: %+5.1f\n", angles[0]*180.0/PI, angles[1]*180.0/PI, angles[2]*180.0/PI);
-                    // send the values in angles over UDP as a string (in udp.c/h)
-                    udp_send(angles, 13);
+                    memcpy(last_euler, angles, 3*sizeof(float));
                 }
             }
             else {
-                time(&current_time);
-                // check if more than CALIBRATION_TIME seconds has passed since calibration started
-                if(abs(difftime(sec, current_time)) > CALIBRATION_TIME) {
-                    printf("Calibration time up...\n");
-                    // allow all of the calculating, broadcasting and offset code from above to run
-                    running = 1;
-                }
-                else
-                    printf("Calibrating...\n");
+                q_multiply(quat_offset, angles+9, angles+9); // multiply the current quaternstion by the offset caputured above to re-zero the values
+                // rescale the gyro and accel values received from the IMU from longs that the
+                // it uses for efficiency to the floats that they actually are and store these values in the angles array
+                rescale_s(gyro, angles+3, GYRO_SCALE, 3);
+                rescale_s(accel, angles+6, ACCEL_SCALE, 3);
+                // turn the quaternation (that is already in angles) into euler angles and store it in the angles array
+                euler(angles+9, angles);
+                printf("Yaw: %+5.1f\tRoll: %+5.1f\tPitch: %+5.1f\n", angles[0]*180.0/PI, angles[1]*180.0/PI, angles[2]*180.0/PI);
+                // send the values in angles over UDP as a string (in udp.c/h)
+                udp_send(angles, 13);
             }
-
         }
     }
 }
