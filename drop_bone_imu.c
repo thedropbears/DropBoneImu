@@ -111,7 +111,7 @@ int init(){
     printf("DMP firmware: %i\n ",dmp_load_motion_driver_firmware());
     printf("DMP orientation: %i\n ",dmp_set_orientation(
             inv_orientation_matrix_to_scalar(gyro_orientation)));
-    unsigned short dmp_features = DMP_FEATURE_LP_QUAT | DMP_FEATURE_TAP | DMP_FEATURE_SEND_RAW_ACCEL | DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL;
+    unsigned short dmp_features = DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_TAP | DMP_FEATURE_SEND_RAW_ACCEL | DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL;
     printf("DMP feature enable: %i\n", dmp_enable_feature(dmp_features));
     printf("DMP set fifo rate: %i\n", dmp_set_fifo_rate(DEFAULT_MPU_HZ));
     printf("DMP enable %i\n", mpu_set_dmp_state(1));
