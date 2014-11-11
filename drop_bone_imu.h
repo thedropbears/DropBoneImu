@@ -16,7 +16,7 @@
 
 #define GYRO_SCALE (PI/(180.0*16.384))
 
-#define ACCEL_SCALE (PI/(180.0*16384))
+#define ACCEL_SCALE (1.0/16384)
 
 #define NOSENTVALS 13 // the numver of values to be sent through UDP
 
