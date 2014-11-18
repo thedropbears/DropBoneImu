@@ -22,7 +22,7 @@ int no_interrupt_flag;
 int verbose_flag;
 
 int main(int argc, char **argv){
-
+	parse_args(argc, argv);
     init();
     short accel[3], gyro[3], sensors[1];
     long quat[4];
@@ -30,17 +30,7 @@ int main(int argc, char **argv){
     unsigned char more[0];
     struct pollfd fdset[1];
     char buf[1];
-    int ch;
-    no_interrupt_flag = 0;
-    verbose_flag = 0;
-    
-    //flag i for no interrupt, v for no verbose
-    while((ch=getopt(argc, argv, "iv:"))) {
-		switch(ch) {
-			case 'i': no_interrupt_flag=1;
-			case 'v': verbose_flag=1;
-		}
-	}
+
     // File descriptor for the GPIO interrupt pin
     int gpio_fd = open(GPIO_INT_FILE, O_RDONLY | O_NONBLOCK);
 
@@ -116,6 +106,19 @@ int main(int argc, char **argv){
     }
 }
 
+void parse_args(int argc, char**argv) {
+	int ch;
+	no_interrupt_flag = 0;
+	verbose_flag = 0;
+    //flag i for no interrupt, v for no verbose
+    while((ch=getopt(argc, argv, "iv:"))) {
+		switch(ch) {
+			case 'i': no_interrupt_flag=1;
+			case 'v': verbose_flag=1;
+		}
+	}
+}
+
 int init(){
     open_bus();
     unsigned char whoami=0;
@@ -132,8 +135,10 @@ int init(){
     printf("DMP feature enable: %i\n", dmp_enable_feature(dmp_features));
     printf("DMP set fifo rate: %i\n", dmp_set_fifo_rate(DEFAULT_MPU_HZ));
     printf("DMP enable %i\n", mpu_set_dmp_state(1));
-    mpu_set_int_level(1); // Interrupt is low when firing
-    dmp_set_interrupt_mode(DMP_INT_CONTINUOUS); // Fire interrupt on new FIFO value
+    if(!no_interrupt_flag) {
+        mpu_set_int_level(1); // Interrupt is low when firing
+        dmp_set_interrupt_mode(DMP_INT_CONTINUOUS); // Fire interrupt on new FIFO value
+	}
     return 0;
 }
 
