@@ -62,6 +62,7 @@ void get_ms(unsigned long *count);
 void reg_int_cb(struct int_param_s *);
 
 void parse_args(int argc, char** argv);
+void print_usage();
 
 inline int min ( int a, int b );
 inline void __no_operation();

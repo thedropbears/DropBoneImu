@@ -20,9 +20,16 @@ static signed char gyro_orientation[9] = {0,  1,  0,
         0,  0,  1};
 int no_interrupt_flag;
 int verbose_flag;
+int print_usage_flag;
+int silent_flag;
+int no_broadcast_flag; //useful for testing when offline
 
 int main(int argc, char** argv){
 	parse_args(argc, argv);
+	if(print_usage_flag) {
+		print_usage();
+		return 0;
+	}
     init();
     short accel[3], gyro[3], sensors[1];
     long quat[4];
@@ -41,8 +48,10 @@ int main(int argc, char** argv){
     time_t sec, current_time; // set to the time before calibration
 
     time(&sec);
-    printf("Read system time\n");
-    printf("Calibrating\n");
+    if(!silent_flag) {
+        printf("Read system time\n");
+        printf("Calibrating\n");
+	}
 
     while (1){
         // Blocking poll to wait for an edge on the interrupt
@@ -75,8 +84,10 @@ int main(int argc, char** argv){
                         && fabs(last_euler[1]-angles[1]) < THRESHOLD
                         && fabs(last_euler[2]-angles[2]) < THRESHOLD)
                         || difftime(current_time, sec) > CALIBRATION_TIME) {
-                    printf("\nCALIBRATED! Threshold: %f Elapsed time: %f\n", CALIBRATION_TIME, difftime(current_time, sec));
-                    printf("CALIBRATED! Threshold: %.5f Errors: %.5f %.5f %.5f\n", THRESHOLD, fabs(last_euler[0]-angles[0]), last_euler[1]-angles[1], last_euler[2]-angles[2]);
+					if(!silent_flag) {
+                        printf("\nCALIBRATED! Threshold: %f Elapsed time: %f\n", CALIBRATION_TIME, difftime(current_time, sec));
+                        printf("CALIBRATED! Threshold: %.5f Errors: %.5f %.5f %.5f\n", THRESHOLD, fabs(last_euler[0]-angles[0]), last_euler[1]-angles[1], last_euler[2]-angles[2]);
+				    }
                     // the IMU has finished calibrating
                     int i;
                     quat_offset[0] = angles[9]; // treat the w value separately as it does not need to be reversed
@@ -96,11 +107,13 @@ int main(int argc, char** argv){
                 rescale_s(accel, angles+6, ACCEL_SCALE, 3);
                 // turn the quaternation (that is already in angles) into euler angles and store it in the angles array
                 euler(angles+9, angles);
-                if(verbose_flag) {
+                if(!silent_flag && verbose_flag) {
 					printf("Yaw: %+5.1f\tPitch: %+5.1f\tRoll: %+5.1f\n", angles[0]*180.0/PI, angles[1]*180.0/PI, angles[2]*180.0/PI);
 				}
                 // send the values in angles over UDP as a string (in udp.c/h)
-                udp_send(angles, 13);
+                if(!no_broadcast_flag) {
+                    udp_send(angles, 13);
+			    }
             }
         }
     }
@@ -110,31 +123,54 @@ void parse_args(int argc, char** argv) {
 	int ch;
 	no_interrupt_flag = 0;
 	verbose_flag = 0;
+	silent_flag = 0;
+	print_usage_flag = 0;
+	no_broadcast_flag = 0;
     //flag i for no interrupt, v for no verbose
-    while((ch=getopt(argc, argv, "iv")) != -1) {
+    while((ch=getopt(argc, argv, "ivsbh?")) != -1) {
 		switch(ch) {
 			case 'i': no_interrupt_flag=1; break;
 			case 'v': verbose_flag=1; break;
+			case 's': silent_flag=1; break;
+			case 'b': no_broadcast_flag=1; break;
+			case 'h':
+			case '?': print_usage_flag=1; break;
 		}
 	}
+}
+
+void print_usage() {
+	printf("DropBoneImu- software interface and broadcast client for MPU 6050:\n");
+	printf("Usage: dropboneimu [-i] [-v] [-s] [-b] [-h, -?]\n\n");
+	printf("Arguments:\n");
+	printf("-i\tDisable interrupt pin. Will make code run if not wired up with interrupt pin\n");
+	printf("-v\tVerbose mode. Print out yaw, pitch and roll as they are received.\n");
+	printf("-b\tNo broadcasts. Stops the udp server from broadcasting information received from the MPU over UDP.\n");
+	printf("-h, -?\tDisplay this usage message, then exit\n");
 }
 
 int init(){
     open_bus();
     unsigned char whoami=0;
     i2c_read(MPU6050_ADDR, MPU6050_WHO_AM_I, 1, &whoami);
-    printf("WHO_AM_I: %x\n", whoami);
+    if(!silent_flag) {
+        printf("WHO_AM_I: %x\n", whoami);
+    }
     struct int_param_s int_param;
-    printf("MPU init: %i\n", mpu_init(&int_param));
-    printf("MPU sensor init: %i\n", mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL));
-    printf("MPU configure fifo: %i\n", mpu_configure_fifo(INV_XYZ_GYRO | INV_XYZ_ACCEL));
-    printf("DMP firmware: %i\n ",dmp_load_motion_driver_firmware());
-    printf("DMP orientation: %i\n ",dmp_set_orientation(
+    if(!silent_flag) {
+        printf("MPU init: %i\n", mpu_init(&int_param));
+        printf("MPU sensor init: %i\n", mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL));
+        printf("MPU configure fifo: %i\n", mpu_configure_fifo(INV_XYZ_GYRO | INV_XYZ_ACCEL));
+        printf("DMP firmware: %i\n ",dmp_load_motion_driver_firmware());
+        printf("DMP orientation: %i\n ",dmp_set_orientation(
             inv_orientation_matrix_to_scalar(gyro_orientation)));
+    }
     unsigned short dmp_features = DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_TAP | DMP_FEATURE_SEND_RAW_ACCEL | DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL;
-    printf("DMP feature enable: %i\n", dmp_enable_feature(dmp_features));
-    printf("DMP set fifo rate: %i\n", dmp_set_fifo_rate(DEFAULT_MPU_HZ));
-    printf("DMP enable %i\n", mpu_set_dmp_state(1));
+    if(!silent_flag) {
+        printf("DMP feature enable: %i\n", dmp_enable_feature(dmp_features));
+        printf("DMP set fifo rate: %i\n", dmp_set_fifo_rate(DEFAULT_MPU_HZ));
+        printf("DMP enable %i\n", mpu_set_dmp_state(1));
+    }
     if(!no_interrupt_flag) {
         mpu_set_int_level(1); // Interrupt is low when firing
         dmp_set_interrupt_mode(DMP_INT_CONTINUOUS); // Fire interrupt on new FIFO value
@@ -276,8 +312,9 @@ void advance_spinner() {
     static char bars[] = { '/', '-', '\\', '|' };
     static int nbars = sizeof(bars) / sizeof(char);
     static int pos = 0;
-
-    printf("%c\b", bars[pos]);
+    if(!silent_flag) {
+        printf("%c\b", bars[pos]);
+    }
     fflush(stdout);
     pos = (pos + 1) % nbars;
 }
