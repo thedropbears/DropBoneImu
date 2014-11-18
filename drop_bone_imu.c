@@ -21,7 +21,7 @@ static signed char gyro_orientation[9] = {0,  1,  0,
 int no_interrupt_flag;
 int verbose_flag;
 
-int main(int argc, char **argv){
+int main(int argc, char** argv){
 	parse_args(argc, argv);
     init();
     short accel[3], gyro[3], sensors[1];
@@ -106,15 +106,15 @@ int main(int argc, char **argv){
     }
 }
 
-void parse_args(int argc, char**argv) {
+void parse_args(int argc, char** argv) {
 	int ch;
 	no_interrupt_flag = 0;
 	verbose_flag = 0;
     //flag i for no interrupt, v for no verbose
-    while((ch=getopt(argc, argv, "iv:"))) {
+    while((ch=getopt(argc, argv, "iv:")) != -1) {
 		switch(ch) {
-			case 'i': no_interrupt_flag=1;
-			case 'v': verbose_flag=1;
+			case 'i': no_interrupt_flag=1; break;
+			case 'v': verbose_flag=1; break;
 		}
 	}
 }
