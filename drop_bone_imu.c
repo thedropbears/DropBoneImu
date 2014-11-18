@@ -111,7 +111,7 @@ void parse_args(int argc, char** argv) {
 	no_interrupt_flag = 0;
 	verbose_flag = 0;
     //flag i for no interrupt, v for no verbose
-    while((ch=getopt(argc, argv, "iv~")) != -1) {
+    while((ch=getopt(argc, argv, "iv")) != -1) {
 		switch(ch) {
 			case 'i': no_interrupt_flag=1; break;
 			case 'v': verbose_flag=1; break;
