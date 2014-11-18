@@ -18,6 +18,8 @@ static int fd; // file descriptor for the I2C bus
 static signed char gyro_orientation[9] = {0,  1,  0,
         -1, 0,  0,
         0,  0,  1};
+int no_interrupt_flag;
+int verbose_flag;
 
 int main(int argc, char **argv){
 
@@ -28,8 +30,17 @@ int main(int argc, char **argv){
     unsigned char more[0];
     struct pollfd fdset[1];
     char buf[1];
+    int ch;
+    no_interrupt_flag = 0;
+    verbose_flag = 0;
     
- 
+    //flag i for no interrupt, v for no verbose
+    while((ch=getopt(argc, argv, "iv:"))) {
+		switch(ch) {
+			case 'i': no_interrupt_flag=1;
+			case 'v': verbose_flag=1;
+		}
+	}
     // File descriptor for the GPIO interrupt pin
     int gpio_fd = open(GPIO_INT_FILE, O_RDONLY | O_NONBLOCK);
 
@@ -45,11 +56,15 @@ int main(int argc, char **argv){
 
     while (1){
         // Blocking poll to wait for an edge on the interrupt
-        poll(fdset, 1, -1);
-
-        if (fdset[0].revents & POLLPRI) {
+        if(!no_interrupt_flag) {
+            poll(fdset, 1, -1);
+        }
+            
+        if (no_interrupt_flag || fdset[0].revents & POLLPRI) {
             // Read the file to make it reset the interrupt
-            read(fdset[0].fd, buf, 1);
+            if(!no_interrupt_flag) {
+                read(fdset[0].fd, buf, 1);
+			}
 
             int fifo_read = dmp_read_fifo(gyro, accel, quat, &timestamp, sensors, more);
             if (fifo_read != 0) {
@@ -91,7 +106,9 @@ int main(int argc, char **argv){
                 rescale_s(accel, angles+6, ACCEL_SCALE, 3);
                 // turn the quaternation (that is already in angles) into euler angles and store it in the angles array
                 euler(angles+9, angles);
-                printf("Yaw: %+5.1f\tPitch: %+5.1f\tRoll: %+5.1f\n", angles[0]*180.0/PI, angles[1]*180.0/PI, angles[2]*180.0/PI);
+                if(verbose_flag) {
+					printf("Yaw: %+5.1f\tPitch: %+5.1f\tRoll: %+5.1f\n", angles[0]*180.0/PI, angles[1]*180.0/PI, angles[2]*180.0/PI);
+				}
                 // send the values in angles over UDP as a string (in udp.c/h)
                 udp_send(angles, 13);
             }
