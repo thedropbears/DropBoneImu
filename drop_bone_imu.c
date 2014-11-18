@@ -25,11 +25,11 @@ int silent_flag;
 int no_broadcast_flag; //useful for testing when offline
 
 int main(int argc, char** argv){
-	parse_args(argc, argv);
-	if(print_usage_flag) {
-		print_usage();
-		return 0;
-	}
+    parse_args(argc, argv);
+    if(print_usage_flag) {
+        print_usage();
+        return 0;
+    }
     init();
     short accel[3], gyro[3], sensors[1];
     long quat[4];
@@ -51,7 +51,7 @@ int main(int argc, char** argv){
     if(!silent_flag) {
         printf("Read system time\n");
         printf("Calibrating\n");
-	}
+    }
 
     while (1){
         // Blocking poll to wait for an edge on the interrupt
@@ -84,7 +84,7 @@ int main(int argc, char** argv){
                         && fabs(last_euler[1]-angles[1]) < THRESHOLD
                         && fabs(last_euler[2]-angles[2]) < THRESHOLD)
                         || difftime(current_time, sec) > CALIBRATION_TIME) {
-					if(!silent_flag) {
+                    if(!silent_flag) {
                         printf("\nCALIBRATED! Threshold: %f Elapsed time: %f\n", CALIBRATION_TIME, difftime(current_time, sec));
                         printf("CALIBRATED! Threshold: %.5f Errors: %.5f %.5f %.5f\n", THRESHOLD, fabs(last_euler[0]-angles[0]), last_euler[1]-angles[1], last_euler[2]-angles[2]);
 				    }
@@ -108,45 +108,45 @@ int main(int argc, char** argv){
                 // turn the quaternation (that is already in angles) into euler angles and store it in the angles array
                 euler(angles+9, angles);
                 if(!silent_flag && verbose_flag) {
-					printf("Yaw: %+5.1f\tPitch: %+5.1f\tRoll: %+5.1f\n", angles[0]*180.0/PI, angles[1]*180.0/PI, angles[2]*180.0/PI);
-				}
+                    printf("Yaw: %+5.1f\tPitch: %+5.1f\tRoll: %+5.1f\n", angles[0]*180.0/PI, angles[1]*180.0/PI, angles[2]*180.0/PI);
+                }
                 // send the values in angles over UDP as a string (in udp.c/h)
                 if(!no_broadcast_flag) {
                     udp_send(angles, 13);
-			    }
+                }
             }
         }
     }
 }
 
 void parse_args(int argc, char** argv) {
-	int ch;
-	no_interrupt_flag = 0;
-	verbose_flag = 0;
-	silent_flag = 0;
-	print_usage_flag = 0;
-	no_broadcast_flag = 0;
+    int ch;
+    no_interrupt_flag = 0;
+    verbose_flag = 0;
+    silent_flag = 0;
+    print_usage_flag = 0;
+    no_broadcast_flag = 0;
     //flag i for no interrupt, v for no verbose
     while((ch=getopt(argc, argv, "ivsbh?")) != -1) {
-		switch(ch) {
-			case 'i': no_interrupt_flag=1; break;
-			case 'v': verbose_flag=1; break;
-			case 's': silent_flag=1; break;
-			case 'b': no_broadcast_flag=1; break;
-			case 'h':
-			case '?': print_usage_flag=1; break;
-		}
-	}
+        switch(ch) {
+            case 'i': no_interrupt_flag=1; break;
+            case 'v': verbose_flag=1; break;
+            case 's': silent_flag=1; break;
+            case 'b': no_broadcast_flag=1; break;
+            case 'h':
+            case '?': print_usage_flag=1; break;
+        }
+    }
 }
 
 void print_usage() {
-	printf("DropBoneImu- software interface and broadcast client for MPU 6050:\n");
-	printf("Usage: dropboneimu [-i] [-v] [-s] [-b] [-h, -?]\n\n");
-	printf("Arguments:\n");
-	printf("-i\tDisable interrupt pin. Will make code run if not wired up with interrupt pin\n");
-	printf("-v\tVerbose mode. Print out yaw, pitch and roll as they are received\n");
-	printf("-b\tNo broadcasts. Stops the udp server from broadcasting information received from the MPU over UDP\n");
-	printf("-h, -?\tDisplay this usage message, then exit\n");
+    printf("DropBoneImu- software interface and broadcast client for MPU 6050:\n");
+    printf("Usage: dropboneimu [-i] [-v] [-s] [-b] [-h, -?]\n\n");
+    printf("Arguments:\n");
+    printf("-i\tDisable interrupt pin. Will make code run if not wired up with interrupt pin\n");
+    printf("-v\tVerbose mode. Print out yaw, pitch and roll as they are received\n");
+    printf("-b\tNo broadcasts. Stops the udp server from broadcasting information received from the MPU over UDP\n");
+    printf("-h, -?\tDisplay this usage message, then exit\n");
 }
 
 int init(){
