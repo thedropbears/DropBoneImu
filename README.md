@@ -10,3 +10,6 @@ All processing is done on board - no need for the BBB/cRIO/roboRIO to do any
 integration.
 
 The BBB broadcasts the accelerometer, gyro and orientation information over UDP.
+
+Documentation is available here:
+http://thedropbears.org.au/mediawiki-1.23.2/index.php/DropBone_IMU
