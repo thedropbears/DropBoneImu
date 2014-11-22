@@ -145,6 +145,7 @@ void print_usage() {
     printf("Arguments:\n");
     printf("-i\tDisable interrupt pin. Will make code run if not wired up with interrupt pin\n");
     printf("-v\tVerbose mode. Print out yaw, pitch and roll as they are received\n");
+    printf("-s\tSilent mode. Do not print anything\n");
     printf("-b\tNo broadcasts. Stops the udp server from broadcasting information received from the MPU over UDP\n");
     printf("-h, -?\tDisplay this usage message, then exit\n");
 }
