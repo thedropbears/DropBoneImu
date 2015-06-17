@@ -13,8 +13,8 @@
 #include <time.h>
 
 static int fd; // file descriptor for the I2C bus
-static signed char gyro_orientation[9] = {0,  1,  0,
-        -1, 0,  0,
+static signed char gyro_orientation[9] = {1,  0,  0,
+        0, 1,  0,
         0,  0,  1};
 int no_interrupt_flag;
 int verbose_flag;
@@ -83,19 +83,29 @@ int main(int argc, char** argv){
 }
 
 void parse_args(int argc, char** argv) {
-    int ch;
+    int ch, opt_count;
     no_interrupt_flag = 0;
     verbose_flag = 0;
     silent_flag = 0;
     print_usage_flag = 0;
     no_broadcast_flag = 0;
     //flag i for no interrupt, v for no verbose
-    while((ch=getopt(argc, argv, "ivsbh?")) != -1) {
+    while((ch=getopt(argc, argv, "ivsbo:h?")) != -1) {
         switch(ch) {
             case 'i': no_interrupt_flag=1; break;
             case 'v': verbose_flag=1; break;
             case 's': silent_flag=1; break;
             case 'b': no_broadcast_flag=1; break;
+            case 'o':
+                // Parse the orientation matrix
+                opt_count = sscanf(optarg, "%hhi,%hhi,%hhi,%hhi,%hhi,%hhi,%hhi,%hhi,%hhi", gyro_orientation, gyro_orientation+1,
+                          gyro_orientation+2, gyro_orientation+3, gyro_orientation+4, gyro_orientation+5,
+                          gyro_orientation+6, gyro_orientation+7, gyro_orientation+8);
+                if (opt_count != 9) {
+                    printf("Must supply 9 comma separated values to the orientation option.\n");
+                    exit(-1); // Exit because we don't know what the behaviour will be!
+                }
+                break;
             case 'h':
             case '?': print_usage_flag=1; break;
         }
@@ -110,6 +120,7 @@ void print_usage() {
     printf("-v\tVerbose mode. Print out yaw, pitch and roll as they are received\n");
     printf("-s\tSilent mode. Do not print anything\n");
     printf("-b\tNo broadcasts. Stops the udp server from broadcasting information received from the MPU over UDP\n");
+    printf("-o\tOrientation matrix of the robot coordinates relative to MPU 6050 coordinates.\n\t9 comma separated values representing X, Y and Z vectors of robot axes.\n");
     printf("-h, -?\tDisplay this usage message, then exit\n");
 }
 
@@ -223,9 +234,9 @@ inline void __no_operation(){
 }
 
 void euler(float* q, float* euler_angles) {
-    euler_angles[0] = -atan2(2*q[1]*q[2] - 2*q[0]*q[3], 2*q[0]*q[0] + 2*q[1]*q[1] - 1); // psi, yaw
-    euler_angles[1] = asin(2*q[1]*q[3] + 2*q[0]*q[2]); // phi, pitch
-    euler_angles[2] = -atan2(2*q[2]*q[3] - 2*q[0]*q[1], 2*q[0]*q[0] + 2*q[3]*q[3] - 1); // theta, roll
+    euler_angles[2] = atan2(2*(q[0]*q[1] + q[2]*q[3]), 1 - 2*(q[1]*q[1] + q[2]*q[2])); // phi, roll
+    euler_angles[1] = asin(2*(q[0]*q[2] + q[1]*q[3])); // theta, pitch
+    euler_angles[0] = atan2(2*(q[0]*q[3] - q[1]*q[2]), 1 - 2*(q[2]*q[2] + q[3]*q[3])); // psi, yaw
 }
 
 // Functions for setting gyro/accel orientation
