@@ -150,7 +150,7 @@ int i2c_write(unsigned char slave_addr, unsigned char reg_addr,
     if (write(fd, tmp, length+1) != length + 1){
         return -1;
     }
-    return 0; 
+    return 0;
 }
 int i2c_read(unsigned char slave_addr, unsigned char reg_addr,
         unsigned char length, unsigned char *data){
@@ -164,7 +164,7 @@ int i2c_read(unsigned char slave_addr, unsigned char reg_addr,
     return 0;
 }
 
-int open_bus() { 
+int open_bus() {
     if ((fd = open(BBB_I2C_FILE, O_RDWR)) < 0) {
         /* ERROR HANDLING: you can check errno to see what went wrong */
         perror("Failed to open the i2c bus");
@@ -270,15 +270,4 @@ unsigned short inv_orientation_matrix_to_scalar(
 
 
     return scalar;
-}
-
-void advance_spinner() {
-    static char bars[] = { '/', '-', '\\', '|' };
-    static int nbars = sizeof(bars) / sizeof(char);
-    static int pos = 0;
-    if(!silent_flag) {
-        printf("%c\b", bars[pos]);
-    }
-    fflush(stdout);
-    pos = (pos + 1) % nbars;
 }
